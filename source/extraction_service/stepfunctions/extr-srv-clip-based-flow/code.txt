@@ -1,0 +1,323 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Parallel processing vision and audio",
+  "States": {
+    "Parallel processing vision and audio": {
+      "Type": "Parallel",
+      "Next": "Update status",
+      "Branches": [
+        {
+          "StartAt": "Get video metadata and generate thumbnail",
+          "States": {
+            "Get video metadata and generate thumbnail": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "##LAMBDA_WF_CLIP_METADATA##"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "Next": "Generate shot durations"
+            },
+            "Generate shot durations": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "##LAMBDA_WF_CLIP_GEN_SHOT_DURATION##"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "Next": "Iterate shot groups"
+            },
+            "Iterate shot groups": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "DISTRIBUTED",
+                  "ExecutionType": "STANDARD"
+                },
+                "StartAt": "Generate shot video clips",
+                "States": {
+                  "Generate shot video clips": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "OutputPath": "$.Payload",
+                    "Parameters": {
+                      "Payload.$": "$",
+                      "FunctionName": "##LAMBDA_WF_CLIP_GEN_SHOT_VIDEO##"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              },
+              "Next": "S3 object keys",
+              "Label": "Iterateshotgroups",
+              "MaxConcurrency": 5,
+              "ItemsPath": "$.shot_groups",
+              "ResultPath": null
+            },
+            "S3 object keys": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "DISTRIBUTED",
+                  "ExecutionType": "STANDARD"
+                },
+                "StartAt": "Parallel",
+                "States": {
+                  "Parallel": {
+                    "Type": "Parallel",
+                    "Branches": [
+                      {
+                        "StartAt": "Analyze shot",
+                        "States": {
+                          "Analyze shot": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::lambda:invoke",
+                            "Parameters": {
+                              "Payload.$": "$",
+                              "FunctionName": "##LAMBDA_WF_CLIP_SHOT_UNDERSTANDING##"
+                            },
+                            "Retry": [
+                              {
+                                "ErrorEquals": [
+                                  "Lambda.ServiceException",
+                                  "Lambda.AWSLambdaException",
+                                  "Lambda.SdkClientException",
+                                  "Lambda.TooManyRequestsException"
+                                ],
+                                "IntervalSeconds": 1,
+                                "MaxAttempts": 3,
+                                "BackoffRate": 2
+                              }
+                            ],
+                            "ResultPath": null,
+                            "End": true
+                          }
+                        }
+                      },
+                      {
+                        "StartAt": "Generate embedding",
+                        "States": {
+                          "Generate embedding": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::lambda:invoke",
+                            "OutputPath": "$.Payload",
+                            "Parameters": {
+                              "Payload.$": "$",
+                              "FunctionName": "##LAMBDA_WF_CLIP_SHOT_EMBED##"
+                            },
+                            "Retry": [
+                              {
+                                "ErrorEquals": [
+                                  "Lambda.ServiceException",
+                                  "Lambda.AWSLambdaException",
+                                  "Lambda.SdkClientException",
+                                  "Lambda.TooManyRequestsException"
+                                ],
+                                "IntervalSeconds": 1,
+                                "MaxAttempts": 3,
+                                "BackoffRate": 2,
+                                "JitterStrategy": "FULL"
+                              }
+                            ],
+                            "End": true
+                          }
+                        }
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              },
+              "ItemReader": {
+                "Resource": "arn:aws:states:::s3:listObjectsV2",
+                "Parameters": {
+                  "Bucket.$": "$.s3_bucket_clip_output",
+                  "Prefix.$": "$.s3_prefix_clip_output"
+                }
+              },
+              "MaxConcurrency": 3,
+              "Label": "S3objectkeys",
+              "Next": "Visual extraction completed"
+            },
+            "Visual extraction completed": {
+              "Type": "Succeed"
+            }
+          }
+        },
+        {
+          "StartAt": "Audio Analysis Enabled",
+          "States": {
+            "Audio Analysis Enabled": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Start Transcribe job",
+                  "Variable": "$.Request.ExtractionSetting.Audio.Transcription",
+                  "BooleanEquals": true
+                }
+              ],
+              "Default": "Job Completed"
+            },
+            "Start Transcribe job": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "##LAMBDA_WF_START_TRANSCRIBE##"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "Next": "Wait 5 Seconds",
+              "OutputPath": "$.Payload"
+            },
+            "Wait 5 Seconds": {
+              "Type": "Wait",
+              "Next": "GetTranscriptionJob",
+              "Seconds": 5
+            },
+            "GetTranscriptionJob": {
+              "Type": "Task",
+              "Parameters": {
+                "TranscriptionJobName.$": "$.TranscriptionJob.TranscriptionJobName"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:transcribe:getTranscriptionJob",
+              "Next": "Job Complete?",
+              "ResultPath": "$.Status"
+            },
+            "Job Complete?": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Store to DB",
+                  "Or": [
+                    {
+                      "Variable": "$.Status.TranscriptionJob.TranscriptionJobStatus",
+                      "StringEquals": "COMPLETED"
+                    },
+                    {
+                      "Variable": "$.Status.TranscriptionJob.TranscriptionJobStatus",
+                      "StringEquals": "FAILED"
+                    }
+                  ]
+                }
+              ],
+              "Default": "Wait 5 Seconds"
+            },
+            "Store to DB": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "##LAMBDA_WF_TRANSCRIPT_POST_PROCESS##"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "Next": "Job Completed"
+            },
+            "Job Completed": {
+              "Comment": "Placeholder for a state which handles the success.",
+              "Type": "Pass",
+              "End": true
+            }
+          }
+        }
+      ]
+    },
+    "Update status": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "##LAMBDA_WF_UPADATE_TASK_STATUS##"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  },
+  "TimeoutSeconds": 7200
+}

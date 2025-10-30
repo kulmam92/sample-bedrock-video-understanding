@@ -1,0 +1,532 @@
+{
+    "frame_prompts": [
+        {
+            "id": "default",
+            "name": "Create your own",
+            "description": "Use a sample prompt template to start with",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "",
+            "toolConfig": null,
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "frame_summary",
+            "name": "Summarize frame",
+            "description": "Default frame summary prompt - breaking down description by foreground, background and general",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "Break down an image into a general description, foreground elements, and background elements.",
+            "toolConfig": {
+                "tools": [
+                    {
+                        "toolSpec": {
+                            "name": "tool_result",
+                            "description": "Break down an image into a general description, foreground elements, and background elements.",
+                            "inputSchema": {
+                                "json": {
+                                    "type": "object",
+                                    "properties": {
+                                        "general": {
+                                            "type": "string",
+                                            "description": "General overview of the image."
+                                        },
+                                        "foreground": {
+                                            "type": "string",
+                                            "description": "Description of the main subject or objects in the foreground."
+                                        },
+                                        "background": {
+                                            "type": "string",
+                                            "description": "Description of the scene or context in the background."
+                                        }
+                                    },
+                                    "required": [
+                                        "general",
+                                        "foreground",
+                                        "background"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "brand_and_logo",
+            "name": "Brand and logo detection",
+            "description": "Detect brands and logos",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "You are an AI system that analyzes images to detect brands and logos. For the given image, identify and return: The brand name(s) or company name(s) associated with any logos or branding present. The location of each detected logo (bounding box coordinates if possible).If no logos or brands are found, return empty",
+            "toolConfig": {
+                "toolChoice": {
+                    "tool": {
+                        "name": "tool_result_with_bb"
+                    }
+                },
+                "tools": [
+                    {
+                        "toolSpec": {
+                            "name": "tool_result_with_bb",
+                            "description": "Detect well known commerical brand and logo in the image and return their coordinates",
+                            "inputSchema": {
+                                "json": {
+                                    "type": "object",
+                                    "properties": {
+                                        "brand_logos": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "coordinates": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "x": {
+                                                                "type": "number"
+                                                            },
+                                                            "width": {
+                                                                "type": "number"
+                                                            },
+                                                            "y": {
+                                                                "type": "number"
+                                                            },
+                                                            "height": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "x",
+                                                            "y",
+                                                            "width",
+                                                            "height"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "name",
+                                                    "coordinates"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "brand_logos"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "detect_face",
+            "name": "Detect face",
+            "description": "Detect face with boundingbox",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "You are an AI system that analyzes images to detect face on the image. For the given image, identify and return: The face name if known, the location of each detected face (bounding box coordinates if possible).If no face are found, return empty",
+            "toolConfig": {
+                "toolChoice": {
+                    "tool": {
+                        "name": "detect_face"
+                    }
+                },
+                "tools": [
+                    {
+                        "toolSpec": {
+                            "name": "detect_face",
+                            "description": "Detect face in the image and return their coordinates",
+                            "inputSchema": {
+                                "json": {
+                                    "type": "object",
+                                    "properties": {
+                                        "faces": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "coordinates": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "x": {
+                                                                "type": "number"
+                                                            },
+                                                            "width": {
+                                                                "type": "number"
+                                                            },
+                                                            "y": {
+                                                                "type": "number"
+                                                            },
+                                                            "height": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "x",
+                                                            "y",
+                                                            "width",
+                                                            "height"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "name",
+                                                    "coordinates"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "faces"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "detect_text",
+            "name": "Detect text",
+            "description": "Detect texts",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "Analyze the image and return text extracted from the image.",
+            "toolConfig": {
+              "tools": [
+                {
+                  "toolSpec": {
+                    "name": "tool_result",
+                    "description": "Analyze the image and return text extracted from the image.",
+                    "inputSchema": {
+                      "json": {
+                        "type": "object",
+                        "properties": {
+                          "text": {
+                            "type": "string",
+                            "description": "Text extracted from the video."
+                          }
+                        },
+                        "required": [
+                          "text"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "object_detection",
+            "name": "Object detection",
+            "description": "Label detection with boundingboxes",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "Detect objects in the image and return their coordinates. If the frame contains a person, determine if the person is facing the camera or not. Consider a person as \"facing the camera\" if their face or front torso is visible and oriented toward the viewer",
+            "toolConfig": {
+                "toolChoice": {
+                    "tool": {
+                        "name": "tool_result_with_bb"
+                    }
+                },
+                "tools": [
+                    {
+                        "toolSpec": {
+                            "name": "tool_result_with_bb",
+                            "description": "Detect objects in the image and return their coordinates. For person objects, also determine if they are facing the camera.",
+                            "inputSchema": {
+                                "json": {
+                                    "type": "object",
+                                    "properties": {
+                                        "objects": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "person",
+                                                            "car",
+                                                            "package"
+                                                        ]
+                                                    },
+                                                    "coordinates": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "x": {
+                                                                "type": "number",
+                                                                "description": "X coordinate of top-left corner"
+                                                            },
+                                                            "width": {
+                                                                "type": "number",
+                                                                "description": "Width of bounding box"
+                                                            },
+                                                            "y": {
+                                                                "type": "number",
+                                                                "description": "Y coordinate of top-left corner"
+                                                            },
+                                                            "height": {
+                                                                "type": "number",
+                                                                "description": "Height of bounding box"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "x",
+                                                            "y",
+                                                            "width",
+                                                            "height"
+                                                        ]
+                                                    },
+                                                    "facingCamera": {
+                                                        "type": "boolean",
+                                                        "description": "Only applicable for 'person' objects. True if person is facing the camera, false otherwise."
+                                                    }
+                                                },
+                                                "required": [
+                                                    "name",
+                                                    "coordinates"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "objects"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0
+            }
+        },
+        {
+            "id": "content_moderation",
+            "name": "Content Moderation",
+            "description": "Detect unsafe content from images and videos",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "You are a content moderation expert tasked with reviewing videos to detect unsafe content. Do not including thinking process to the result.",
+            "toolConfig": {
+                "toolSpec": {
+                "name": "tool_result",
+                "description": "Detect whether the provided video contains any unsafe content and classify it into the following categories.  Do not including thinking process to the result.",
+                "inputSchema": {
+                    "json": {
+                    "type": "object",
+                    "properties": {
+                        "alcohol": {
+                        "type": "boolean",
+                        "description": "Indicates if the video contains any scenes involving alcohol."
+                        },
+                        "tobacco": {
+                        "type": "boolean",
+                        "description": "Indicates if the video contains any scenes including but not limited to bare-chested males, revealing clothing, or other sexually suggestive content.."
+                        },
+                        "suggestive": {
+                        "type": "boolean",
+                        "description": "Indicates if the video contains bare-chested males, revealing clothing, or other inappropriate scenes."
+                        }
+                    },
+                    "required": [
+                        "suggestive",
+                        "tobacco",
+                        "alcohol"
+                    ]
+                    }
+                }
+                }
+            },
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        }
+    ],
+    "shot_prompts": [
+        {
+            "id": "default",
+            "name": "Create your own",
+            "description": "Use a sample prompt template to start with",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "",
+            "toolConfig": null,
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "shot_summary",
+            "name": "Summarize shot",
+            "description": "Generate shot summary based on frames in the shot",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "You are a video summarization specialist. Generate a shot-level summary using the provided images and corresponding audio transcription. Begin the summary with a direct description, avoiding phrases like 'the image shows' or 'the video shows'.",
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "iab_classfication",
+            "name": "IAB classification",
+            "description": "Classify images into IAB categories",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "The provided images are captured from a video shot. Classify them into relevant IAB categories. Include name and code. Separate multiple values with commas and ensure only unique values are included.",
+            "toolConfig": {
+                "toolChoice": {
+                    "tool": {
+                        "name": "iab"
+                    }
+                },
+                "tools": [
+                    {
+                        "toolSpec": {
+                            "name": "iab",
+                            "description": "Classify the image into relevant IAB categories include name and code. Remove duplicate entries.",
+                            "inputSchema": {
+                                "json": {
+                                    "type": "object",
+                                    "properties": {
+                                        "iabs": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "name",
+                                                    "code"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "iabs"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        }
+    ],
+    "models": [
+        {
+            "name": "Amazon Nova 1.0 Lite",
+            "value": "amazon.nova-lite-v1:0"
+        },
+        {
+            "name": "Amazon Nova 1.0 Pro",
+            "value": "amazon.nova-pro-v1:0"
+        },
+        {
+            "name": "Anthropic Claude 4.5 Haiku",
+            "value": "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+        }
+        ,
+        {
+            "name": "Anthropic Claude 4.5 Sonnet",
+            "value": "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+        },
+        {
+            "name": "Llama 4 Scout 17b Instruct",
+            "value": "us.meta.llama4-scout-17b-instruct-v1:0"
+        }
+    ],
+    "video_sample_interval": [
+        {
+            "label": "4 frames per second",
+            "value": 0.25
+        },
+        {
+            "label": "2 frames per second",
+            "value": 0.5
+        },
+        {
+            "label": "1 frame per second",
+            "value": 1
+        },
+        {
+            "label": "Sample every 2 seconds",
+            "value": 2
+        },
+        {
+            "label": "Sample every 3 seconds",
+            "value": 3
+        },
+        {
+            "label": "Sample every 4 seconds",
+            "value": 4
+        },
+        {
+            "label": "Sample every 5 seconds",
+            "value": 5
+        },
+        {
+            "label": "Sample every 10 seconds",
+            "value": 10
+        },
+        {
+            "label": "Sample every 30 seconds",
+            "value": 30
+        },
+        {
+            "label": "Sample every 1 minute",
+            "value": 60
+        }
+    ],
+    "shot_similarity_threshold_default_orb": 0.257,
+    "shot_similarity_threshold_default_novamme": 0.41,
+    "image_similarity_threshold_default_orb": 0.325,
+    "image_similarity_threshold_default_novamme": 0.2,
+    "default_max_tokens": 500,
+    "default_top_p": 0,
+    "default_temperature": 0
+}

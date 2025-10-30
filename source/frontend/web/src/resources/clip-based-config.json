@@ -1,0 +1,238 @@
+{
+    "shot_prompts": [
+        {
+            "id": "default",
+            "name": "Create your own",
+            "description": "Use a sample prompt template to start with",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "",
+            "toolConfig": null,
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "shot_summary",
+            "name": "Summarize shot",
+            "description": "Generate shot summary based on frames in the shot",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "You are a video summarization specialist. Generate a shot-level summary using the provided images and corresponding audio transcription. Begin the summary with a direct description, avoiding phrases like 'the image shows' or 'the video shows'.",
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "detect_text",
+            "name": "Detect text",
+            "description": "Detect texts",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "Analyze the video and return text extracted from the video.",
+            "toolConfig": {
+              "tools": [
+                {
+                  "toolSpec": {
+                    "name": "tool_result",
+                    "description": "Analyze the video and return text extracted from the video.",
+                    "inputSchema": {
+                      "json": {
+                        "type": "object",
+                        "properties": {
+                          "text": {
+                            "type": "string",
+                            "description": "Text extracted from the video."
+                          }
+                        },
+                        "required": [
+                          "text"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "iab_classfication",
+            "name": "IAB classification",
+            "description": "Classify images into IAB categories",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "The provided images are captured from a video shot. Classify them into relevant IAB categories. Include name and code. Separate multiple values with commas and ensure only unique values are included.",
+            "toolConfig": {
+                "toolChoice": {
+                    "tool": {
+                        "name": "iab"
+                    }
+                },
+                "tools": [
+                    {
+                        "toolSpec": {
+                            "name": "iab",
+                            "description": "Classify the image into relevant IAB categories include name and code. Remove duplicate entries.",
+                            "inputSchema": {
+                                "json": {
+                                    "type": "object",
+                                    "properties": {
+                                        "iabs": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "code": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "name",
+                                                    "code"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "iabs"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "custom_classification",
+            "name": "Customized classification",
+            "description": "Classify video clips into customized categories",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "Analyze the video clip and classify it it into predefined categories",
+            "toolConfig": {
+                "toolChoice": {
+                    "tool": {
+                        "name": "tool_result"
+                    }
+                },
+                "tools": [
+                    {
+                    "toolSpec": {
+                      "name": "tool_result",
+                      "description": "Classify the video clip to attach labels including: indoor, outdoor, sports.",
+                      "inputSchema": {
+                        "json": {
+                          "type": "object",
+                          "properties": {
+                            "indoor": {
+                              "type": "boolen",
+                              "description": "If the video is a indoor scene"
+                            },
+                            "outdoor": {
+                              "type": "boolen",
+                              "description": "If the video is a outdoor scene"
+                            },
+                            "sports": {
+                              "type": "boolen",
+                              "description": "If the video is about sports"
+                            }
+                          },
+                          "required": [
+                            "indoor", "outdoor", "sports"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ]
+            },
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        },
+        {
+            "id": "content_moderation",
+            "name": "Content Moderation",
+            "description": "Detect unsafe content from images and videos",
+            "model_id": "amazon.nova-lite-v1:0",
+            "prompt": "You are a content moderation expert tasked with reviewing videos to detect unsafe content. Do not including thinking process to the result.",
+            "toolConfig": {
+              "tools": [
+                {
+                  "toolSpec": {
+                    "name": "tool_result",
+                    "description": "Detect whether the provided video contains any unsafe content and classify it into the following categories.  Do not including thinking process to the result.",
+                    "inputSchema": {
+                      "json": {
+                        "type": "object",
+                        "properties": {
+                          "alcohol": {
+                            "type": "boolean",
+                            "description": "Indicates if the video contains any scenes involving alcohol."
+                          },
+                          "tobacco": {
+                            "type": "boolean",
+                            "description": "Indicates if the video contains any scenes including but not limited to bare-chested males, revealing clothing, or other sexually suggestive content.."
+                          },
+                          "suggestive": {
+                            "type": "boolean",
+                            "description": "Indicates if the video contains bare-chested males, revealing clothing, or other inappropriate scenes."
+                          }
+                        },
+                        "required": [
+                          "suggestive",
+                          "tobacco",
+                          "alcohol"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "inference_config": {
+                "maxTokens": 500,
+                "topP": 0.1,
+                "temperature": 0.7
+            }
+        }
+    ],
+    "models": [
+        {
+            "name": "Amazon Nova 1.5 Lite",
+            "value": "amazon.nova-lite-1-5-v1:0"
+        },
+        {
+            "name": "Amazon Nova 1.5 Pro",
+            "value": "amazon.nova-pro-1-5-v1:0"
+        },
+        {
+            "name": "Amazon Nova 1.0 Lite",
+            "value": "amazon.nova-lite-v1:0"
+        },
+        {
+            "name": "Amazon Nova 1.0 Pro",
+            "value": "amazon.nova-pro-v1:0"
+        }
+    ],
+    "embed_model_id": "amazon.nova-2-multimodal-embeddings-v1:0",
+    "default_embed_dimension": 1024,
+    "default_max_tokens": 500,
+    "default_top_p": 0,
+    "default_temperature": 0
+}

@@ -1,0 +1,67 @@
+.framevideodetail {
+    vertical-align: top;
+}
+
+.framevideodetail .close {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    display: block;
+    float: right;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.framevideodetail .video {
+    display: inline-block;
+    width: 48%;
+    background-color: rgb(237, 237, 237);
+    border-radius: 20px;
+    padding: 20px;
+}
+.framevideodetail .video .taskid {
+    font-size: small;
+}
+.framevideodetail .video .title {
+    font-size: large;
+    padding-top: 10px;
+}
+
+.framevideodetail .video .timestamp {
+    font-size: small;
+}
+
+.framevideodetail .video .processing {
+    font-size: small;
+}
+.framevideodetail .video .request {
+    display: block;
+    float: right;
+    margin-top: -20px;
+}
+.framevideodetail .video video {
+    width: 100%;
+}
+
+.framevideodetail .detail {
+    display: inline-block;
+    vertical-align: top;
+    width: 48%;
+    height: 100%;
+    margin-left: 10px;
+    padding: 10px;
+}
+.framevideodetail .smartsample {
+    margin: 40px 0px 10px 0px;
+}
+.framevideodetail .close {
+    display: block;
+    border:solid 2px gray;
+    border-radius: 10px;
+    padding: 5px 5px 0px 5px;
+    float: left;
+}
+.framevideodetail .analyze {
+    display: block;
+    float: right;
+}

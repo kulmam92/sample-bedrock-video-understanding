@@ -1,0 +1,333 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Parallel processing vision and audio",
+  "States": {
+    "Parallel processing vision and audio": {
+      "Type": "Parallel",
+      "Next": "Update status",
+      "Branches": [
+        {
+          "StartAt": "Get video metadata and convert to suitable format if needed",
+          "States": {
+            "Get video metadata and convert to suitable format if needed": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "##LAMBDA_WF_FRAME_META_DATA##"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "Next": "Iterate video chunks"
+            },
+            "Iterate video chunks": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "DISTRIBUTED",
+                  "ExecutionType": "STANDARD"
+                },
+                "StartAt": "sample frames from video",
+                "States": {
+                  "sample frames from video": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Parameters": {
+                      "Payload.$": "$",
+                      "FunctionName": "##LAMBDA_WF_FRAME_SAMPLE_VIDEO##"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2
+                      }
+                    ],
+                    "Next": "Similarity Method",
+                    "ResultPath": null
+                  },
+                  "Similarity Method": {
+                    "Type": "Choice",
+                    "Choices": [
+                      {
+                        "Next": "Remove similiar frames - NovaMME",
+                        "Variable": "$.similarity_method",
+                        "StringEquals": "novamme"
+                      }
+                    ],
+                    "Default": "Remove similar frames - ORB"
+                  },
+                  "Remove similiar frames - NovaMME": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "OutputPath": "$.Payload",
+                    "Parameters": {
+                      "Payload.$": "$",
+                      "FunctionName": "##LAMBDA_WF_FRAME_DEDUP_MME##"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "End": true
+                  },
+                  "Remove similar frames - ORB": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "OutputPath": "$.Payload",
+                    "Parameters": {
+                      "Payload.$": "$",
+                      "FunctionName": "##LAMBDA_WF_FRAME_DEDUP_ORB##"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              },
+              "Label": "Iteratevideochunks",
+              "MaxConcurrency": 2,
+              "ItemsPath": "$.chunks",
+              "Next": "Frame Analysis Enabled",
+              "ResultPath": null
+            },
+            "Frame Analysis Enabled": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Visual extraction completed",
+                  "Variable": "$.Request.ExtractionSetting.Vision.Frame.Enabled",
+                  "BooleanEquals": false
+                }
+              ],
+              "Default": "Iterate sampled images"
+            },
+            "Iterate sampled images": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "DISTRIBUTED",
+                  "ExecutionType": "STANDARD"
+                },
+                "StartAt": "Image extraction: face, text, moderation, summary, custom outputs",
+                "States": {
+                  "Image extraction: face, text, moderation, summary, custom outputs": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "OutputPath": "$.Payload",
+                    "Parameters": {
+                      "Payload.$": "$",
+                      "FunctionName": "##LAMBDA_WF_FRAME_EXTRACTION##"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              },
+              "Label": "Iteratesampledimages",
+              "MaxConcurrency": 3,
+              "ItemReader": {
+                "Resource": "arn:aws:states:::s3:listObjectsV2",
+                "Parameters": {
+                  "Bucket.$": "$.MetaData.VideoFrameS3.S3Bucket",
+                  "Prefix.$": "$.MetaData.VideoFrameS3.S3Prefix"
+                }
+              },
+              "ItemSelector": {
+                "Request.$": "$.Request",
+                "MetaData.$": "$.MetaData",
+                "Key.$": "$$.Map.Item.Value.Key"
+              },
+              "ResultPath": null,
+              "Next": "Visual extraction completed"
+            },
+            "Visual extraction completed": {
+              "Type": "Succeed"
+            }
+          }
+        },
+        {
+          "StartAt": "Audio Analysis Enabled",
+          "States": {
+            "Audio Analysis Enabled": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Start Transcribe job",
+                  "Variable": "$.Request.ExtractionSetting.Audio.Transcription",
+                  "BooleanEquals": true
+                }
+              ],
+              "Default": "Job Completed"
+            },
+            "Start Transcribe job": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "##LAMBDA_WF_START_TRANSCRIBE##"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "Next": "Wait 5 Seconds",
+              "OutputPath": "$.Payload"
+            },
+            "Wait 5 Seconds": {
+              "Type": "Wait",
+              "Next": "GetTranscriptionJob",
+              "Seconds": 5
+            },
+            "GetTranscriptionJob": {
+              "Type": "Task",
+              "Parameters": {
+                "TranscriptionJobName.$": "$.TranscriptionJob.TranscriptionJobName"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:transcribe:getTranscriptionJob",
+              "Next": "Job Complete?",
+              "ResultPath": "$.Status"
+            },
+            "Job Complete?": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Next": "Store to DB",
+                  "Or": [
+                    {
+                      "Variable": "$.Status.TranscriptionJob.TranscriptionJobStatus",
+                      "StringEquals": "COMPLETED"
+                    },
+                    {
+                      "Variable": "$.Status.TranscriptionJob.TranscriptionJobStatus",
+                      "StringEquals": "FAILED"
+                    }
+                  ]
+                }
+              ],
+              "Default": "Wait 5 Seconds"
+            },
+            "Store to DB": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "##LAMBDA_WF_TRANSCRIPT_POST_PROCESS##"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "Next": "Job Completed"
+            },
+            "Job Completed": {
+              "Comment": "Placeholder for a state which handles the success.",
+              "Type": "Pass",
+              "End": true
+            }
+          }
+        }
+      ]
+    },
+    "Update status": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "##LAMBDA_WF_UPADATE_TASK_STATUS##"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  },
+  "TimeoutSeconds": 7200
+}

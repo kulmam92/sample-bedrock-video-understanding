@@ -1,0 +1,94 @@
+.videoframes {
+    padding-left: 10px;
+    height: 100%;
+    width: 100%;
+}
+
+.videoframes .frames {
+    max-height: 1000px;
+    width: 100%;
+    overflow-y: auto;
+}
+
+.videoframes .frame {
+    display: inline-block;
+    border: solid 1px lightgray;
+    padding: 10px;
+    margin: 5px;
+    width: 100%;
+}
+.videoframes .frame:hover {
+    background-color: rgb(239, 239, 239);
+    cursor: pointer;
+}
+.videoframes .frame .ts{
+    padding: 5px;
+    color: gray;
+}
+
+.videoframes .frame img{
+    width:100%;
+}
+
+.videoframes .frame .score {
+    display: inline-block;
+    vertical-align: top;
+    width:100%;
+    padding: 5px;
+    font-size: small;
+    color:gray;
+}
+.videoframes .frame .caption {
+    display: inline-block;
+    vertical-align: top;
+    width:100%;
+    padding: 5px;
+}
+.videoframes .frame .label {
+    display: inline-block;
+    vertical-align: top;
+    width:100%;
+    padding: 5px;
+}
+
+.videoframes .frame .output {
+    padding: 10px;
+}
+
+.videoframes .frame .output .title {
+    font-weight: bold;
+}
+
+.videoframes .pager {
+    display: block;
+    float: right;
+}
+
+.framebbox {
+  position: relative;
+  display: inline-block; /* keeps image size natural */
+}
+.framebbox img{
+  display: block;
+  max-width: 100%; /* responsive */
+  height: auto;
+}
+
+.framebbox .coord-box {
+  position: absolute;
+  border: 2px solid yellow;
+  pointer-events: none; /* boxes don't block mouse */
+  box-sizing: border-box;
+  z-index: 1000;
+}
+.framebbox .coord-box .coord-label {
+    position: absolute;
+    top: -18px;
+    left: 0;
+    font-size: 12px;
+    background-color: rgba(0,0,0,0.6);
+    color: #fff;
+    padding: 2px 4px;
+    border-radius: 3px;
+    z-index: 1001;
+}

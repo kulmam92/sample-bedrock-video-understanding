@@ -1,0 +1,74 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+.app {
+    height: 90vh; /* full viewport height */
+}
+
+.app .topmenu {
+  background-color: white;
+  color: rgb(70, 70, 70);
+}
+
+.app .topmenu .title {
+  font-size: large;
+  padding: 10px 10px 10px 20px;
+  color: gray;
+}
+
+.app .topmenu .user {
+  font-size: small;
+  display: block;
+  float: right;
+  margin: -30px 60px 0px 0px;
+}
+
+.app .sidemenu {
+  width: 190px;
+  height: 100%;
+  display: block;
+  float: left;
+  padding: 10px;
+  margin: 0px 10px 0px 10px;
+  border-radius: 5px;
+}
+
+.app .sidemenu .bottom {
+  display: block;
+  width: 190px;
+  position: absolute;
+  bottom: 50px;
+}
+.app .sidemenu .item{
+  padding:10px;
+  padding:5px 15px 5px 15px;
+  margin-top: 5px;
+}
+
+.app .sidemenu .item:hover
+{
+  padding:5px 15px 5px 15px;
+  background-color: rgb(231, 231, 231);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.app .sidemenu .itemselected {
+  padding:5px 15px 5px 15px;
+  background-color: #000000;
+  color: white;
+  border-radius: 10px;
+}
+.app .sidemenu .itemselected:hover {
+  cursor: pointer;
+}
+.app .content {
+  display: block;
+  margin-left: 200px;
+  padding: 5px 30px 30px 30px;
+  overflow-y: auto;
+  max-height: 100%;
+}

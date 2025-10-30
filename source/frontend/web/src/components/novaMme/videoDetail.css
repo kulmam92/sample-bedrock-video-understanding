@@ -1,0 +1,62 @@
+.novavideodetail {
+    vertical-align: top;
+}
+
+.novavideodetail .close {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    display: block;
+    float: right;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.novavideodetail .video {
+    display: inline-block;
+    width: 48%;
+}
+.novavideodetail .video .taskid {
+    font-size: small;
+}
+.novavideodetail .video .title {
+    font-size: large;
+    color: gray;
+    padding-top: 10px;
+}
+
+.novavideodetail .video .timestamp {
+    font-size: small;
+    color: gray;
+}
+
+.novavideodetail .video .processing {
+    font-size: small;
+}
+.novavideodetail .video .request {
+    display: block;
+    float: right;
+    margin-top: -20px;
+}
+.novavideodetail .video video {
+    width: 100%;
+}
+
+.novavideodetail .detail {
+    display: inline-block;
+    vertical-align: top;
+    width: 48%;
+    height: 100%;
+    border-left: solid 1px lightgray;
+    margin-left: 10px;
+}
+.novavideodetail .smartsample {
+    margin: 40px 0px 10px 0px;
+}
+.novavideodetail .close {
+    display: block;
+    border:solid 2px gray;
+    border-radius: 10px;
+    padding: 5px 5px 0px 5px;
+    float: left;
+}

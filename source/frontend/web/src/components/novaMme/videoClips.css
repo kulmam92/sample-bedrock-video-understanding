@@ -1,0 +1,15 @@
+.videoclips {
+    padding-left: 10px;
+    height: 100%;
+    width: 100%;
+}
+
+.videoclips .clip {
+    display: inline-block;
+    width: 30%;
+    padding: 10px;
+    border: solid 1px silver;
+    border-radius: 5px;
+    margin: 3px;
+    cursor: pointer;
+}

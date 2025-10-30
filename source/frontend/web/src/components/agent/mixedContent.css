@@ -1,0 +1,11 @@
+.mixed-content-container {
+  font-family: sans-serif;
+  line-height: 1.5;
+}
+
+.mixed-content-container thinking {
+  font-size: 0.8em;
+  color: #888;
+  display: block; /* Make it a block element to be on its own line */
+  margin-top: 10px; /* Add some spacing above it */
+}

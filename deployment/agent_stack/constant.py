@@ -1,0 +1,6 @@
+RES_NAME_PREFIX='bedrock-mm-'
+
+DYNAMO_VIDEO_TASK_TABLE="bedrock_mm_extr_srv_video_task"
+DYNAMO_VIDEO_TRANS_TABLE="bedrock_mm_extr_srv_video_transcript"
+DYNAMO_VIDEO_FRAME_TABLE="bedrock_mm_extr_srv_video_frame"
+DYNAMO_VIDEO_SHOT_TABLE="bedrock_mm_extr_srv_video_shot"

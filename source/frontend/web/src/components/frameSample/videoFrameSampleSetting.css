@@ -1,0 +1,8 @@
+.setting {
+}
+
+.setting .frametoggle, .setting .toggleshot {
+    display: block;
+    float: right;
+    margin-top: -40px;
+}

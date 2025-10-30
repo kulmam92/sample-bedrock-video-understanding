@@ -1,0 +1,58 @@
+.videoupload {
+    padding-left: 10px;
+    height: 100%;
+    min-height: 600px;
+    width: 100%;
+    overflow-y: auto;
+}
+
+.videoupload .message {
+    margin-bottom: 10px;
+}
+
+.videoupload .uploadedfile {
+    display: block;
+    width: 100%;
+    border-radius: 10px;
+    padding: 10px;
+    border: solid 1px gray;
+    margin:10px;
+}
+
+.videoupload .uploadedfile .attribute{
+    color: darkgray
+}
+
+.videoupload .custom_interval{
+    display: block;
+    margin-top: -20px;
+    margin-left: 20px;
+    width: 90%;
+}
+.videoupload .desc {
+    font-size: small;
+    color: gray;
+}
+.videoupload .shotwarn {
+    display: block;
+    position: relative;
+    float: right;
+    padding: 0px 0px 10px 10px;
+}
+.videoupload .embedding {
+    padding: 10px;
+    display: flex;
+    align-items: flex-start;
+}
+.videoupload .embedding .option {
+    display: inline-block;
+    width: 30%;
+}
+.videoupload .embedding .setting {
+    display: inline-block;
+    width: 70%;
+    height: 500px;
+    border: solid 1px silver;
+    border-radius: 10px;
+    margin-left: 10px;
+}

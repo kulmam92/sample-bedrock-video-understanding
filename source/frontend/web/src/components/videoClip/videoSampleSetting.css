@@ -1,0 +1,17 @@
+.clipconfigsetting {
+}
+
+.clipconfigsetting .frametoggle, .setting .toggleshot {
+    display: block;
+    float: right;
+    margin-top: -40px;
+}
+.clipconfigsetting .label {
+    font-weight: bold;
+    padding-bottom: 3px;
+    display: inline-block;
+}
+.clipconfigsetting .desc {
+    display: inline-block;
+    padding-left: 10px;
+}

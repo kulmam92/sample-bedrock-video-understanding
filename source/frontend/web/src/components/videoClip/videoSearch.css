@@ -1,0 +1,274 @@
+.clipvideosearch {
+    width: 100%;
+}
+.clipvideosearch .title {
+    font-size: large;
+    font-weight: bold;
+    padding: 0px 0px 0px 10px;
+}
+.clipvideosearch .upload {
+    margin-top: -25px;
+}
+.clipvideosearch .noresult {
+    padding: 20px;
+    font-size: large;
+    color: gray;
+}
+.clipvideosearch .thumb {
+    display: inline-block;
+    margin: 12px;
+    width: 31%;
+    vertical-align: top;
+    min-height: 240px;
+    cursor: pointer;
+}
+
+.clipvideosearch .thumb video{
+    width: 100%;
+    cursor: pointer;
+    padding: 0px 15% 0px 15%;
+    background-color: gray;
+}
+
+.clipvideosearch .thumb video{
+    border-radius: 20px;
+}
+.clipvideosearch .thumb video:hover{
+    border-radius: 30px;
+}
+.clipvideosearch .thumb .img {
+    display: block;
+    padding: 5px 0px 0px 0px;
+    max-width: 100%;
+    min-height: 150px;
+    cursor: pointer;
+    border-radius: 30px;
+    max-height: 230px;
+    margin: 0 auto;
+    object-fit: cover;
+    object-position: center;
+}
+.clipvideosearch .thumb .img:hover {
+    cursor: pointer;
+    border-radius: 30px;
+}
+
+.clipvideosearch .thumb .video {
+    display: block;
+    padding: 0px;
+    width: 100%;
+    height: 150px;
+    background-color: gray;
+    cursor: pointer;
+}
+
+.clipvideosearch .thumb .title {
+    display: block;
+    width: 100%;
+    max-height: 70px;
+    padding: 10px 0px 0px 15px;
+    font-size: medium;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.clipvideosearch .thumb .status {
+    display: block;
+    font-size: small;
+    padding: 5px 0px 0px 15px;
+}
+
+.clipvideosearch .thumb .action {
+    display: block;
+    float: right;
+    cursor: pointer;
+    margin: -40px 10px 0px 0px;
+}
+
+.clipvideosearch .thumb .timestamp {
+    font-size: x-small;
+    color:gray;
+    padding: 5px 0px 0px 15px;
+}
+
+.clipvideosearch .thumb .duration {
+    float: right;
+    margin-right: 10px;
+}
+.clipvideosearch .thumb .distance {
+    display: block;
+    color: gray;
+    font-size: small;
+    padding-left: 10px;
+}
+.clipvideosearch .thumb .hide {
+    display: none;
+}
+
+.clipvideosearch .showmore {
+    display: block;
+    padding-left: 40%;
+    margin: 30px;
+}
+
+.clipvideosearch .searchinput {
+    display: inline-block;
+    width: 100%;
+    height: 120px;
+    border: solid 1px rgb(0, 74, 200);
+    border-radius: 30px;
+    margin: 20px 0px 30px 0px;
+    padding: 2px 10px 10px 10px;
+    box-shadow: 0px 0px 4px rgb(0, 74, 200);
+}
+
+.clipvideosearch .searchinput .search {
+    display: block;
+    float: right;
+    margin-top: 20px;
+}
+.clipvideosearch .searchinput .upload {
+    margin: 20px 0px 10px 20px;
+    width: 300px;
+}
+
+.clipvideosearch .searchinput .input {
+    display: block;
+    height: 40px;
+    margin: 10px 0px 0px 15px;
+    vertical-align: top;
+}
+
+.clipvideosearch .searchinput .clear {
+    display: block;
+    float: right;
+    right: 0px;
+    font-size: x-large;
+    margin: -10px 60px 0px 0px;
+}
+.clipvideosearch .searchinput .input .previewupload {
+    width: 200px;
+    height: 50px;
+}
+
+.clipvideosearch .searchinput .input .previewupload img{
+    max-width: 150px;
+    max-height: 50px;
+    border: solid 2px gray;
+    border-radius: 10px;
+}
+
+.clipvideosearch .searchinput .input .input-text, .clipvideosearch .searchinput .input .input-text:focus {
+    display: inline-block;
+    width: 90%;
+    height: 60px;
+    border: 0px;
+    outline: none;
+    vertical-align: top;
+    margin: 5px;
+}
+
+.clipvideosearch .searchinput .search-by-image{
+    display: inline-block;
+    border-radius: 10px;
+    border: 1px lightgray solid;
+    padding: 10px;
+    margin-top: 10px;
+    width: 550px;
+}
+.clipvideosearch .searchinput .search-by-text{
+    display: inline-block;
+    border-radius: 10px;
+    border: 1px lightgray solid;
+    padding: 10px;
+    margin-top: 10px;
+    width: 500px;
+}
+
+.clipvideosearch .searchinput .search-by-image .title, .clipvideosearch .searchinput .search-by-text .title{
+    font-size: medium;
+    font-weight: bold;
+    padding: 10px;
+}
+
+.clipvideosearch .searchinput .search-by-text .desc, .clipvideosearch .searchinput .search-by-image .desc{
+    font-size: small;
+    padding:10px;
+}
+
+.clipvideosearch .searchinput .search-by-image .input{
+    display: inline-block;
+    padding: 10px;
+    vertical-align: top;
+}
+
+.clipvideosearch .searchinput .search-by-image .image-container {
+    display: block;
+    float: right;
+}
+
+.clipvideosearch .searchinput .search-by-image .uploaded-image {
+    max-width: 250px;
+    max-height: 250px;
+    display: block;
+    margin-top: -70px;
+}
+
+.clipvideosearch .searchinput .search-by-image .image-container svg{
+    display: block;
+    float: right;
+    vertical-align: top;
+    margin-top: -100px;
+    cursor: pointer;
+}
+
+.clipvideosearch .searchinput .search-by-image .score-threshold, .clipvideosearch .searchinput .search-by-text .score-threshold{
+    width: 200px;
+    margin-left: 10px;
+}
+
+.clipvideosearch .cleanup {
+    margin-top: 5px;
+}
+
+.videomdoal {
+    color: gray;
+}
+.videomdoal .videom {
+    width: 100%;
+}
+.videomdoal .timestamp {
+    font-size: large;
+}
+.videomdoal .left {
+    display: inline-block;
+    width: 55%;
+}
+.videomdoal .left video {
+    width: 100%;
+}
+.videomdoal .right {
+    display: block;
+    float: right;
+    padding: 0px 0px 0px 20px;
+    font-size: medium;
+    width: 45%;
+}
+
+.videomdoal .right .timestamp{
+    color: black;
+}
+
+.videomdoal .right .output .title{
+    color: black;
+    font-weight: bold;
+    padding: 10px 0px 10px 0px;
+}
+
+
+.clipdoc .center{
+    display: block;
+    max-width: 100%;
+    width: 100%;
+}
