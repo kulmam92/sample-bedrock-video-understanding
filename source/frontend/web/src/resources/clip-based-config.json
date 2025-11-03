@@ -214,14 +214,6 @@
     ],
     "models": [
         {
-            "name": "Amazon Nova 1.5 Lite",
-            "value": "amazon.nova-lite-1-5-v1:0"
-        },
-        {
-            "name": "Amazon Nova 1.5 Pro",
-            "value": "amazon.nova-pro-1-5-v1:0"
-        },
-        {
             "name": "Amazon Nova 1.0 Lite",
             "value": "amazon.nova-lite-v1:0"
         },

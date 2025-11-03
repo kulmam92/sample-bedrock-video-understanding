@@ -33,7 +33,7 @@ This video understanding tool allows you to upload videos, experiment with diffe
 ---
 
 ## Workflows
-This video understanding tool provides four distinct workflows, each leveraging different video extraction methods.
+This video understanding tool provides three distinct workflows, each leveraging different video extraction methods.
 
 ### Frame-based workflow
 A traditional approach to video analysis involves sampling image frames at fixed intervals, removing similar or redundant frames, and then applying image understanding foundation models to extract visual information at the frame level. Audio transcription is performed separately. At the end of this workflow, you obtain both visual and audio metadata that can be used for downstream analysis.
