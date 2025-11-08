@@ -1,5 +1,7 @@
 # Bedrock Video Understanding
 
+> This solution is available as a CDK package and can be deployed to your AWS account by running just a few simple scripts.
+
 Understanding video content is inherently complex, as it combines visual, auditory, and temporal information that must be analyzed together for meaningful insights. Different use cases — such as media scene analysis, ad break detection, IP camera tracking, or social media moderation — often require distinct workflows with varying cost, accuracy, and latency trade-offs.
 
 An increasing number of multimodal understanding models and features are now available on Amazon Bedrock.
