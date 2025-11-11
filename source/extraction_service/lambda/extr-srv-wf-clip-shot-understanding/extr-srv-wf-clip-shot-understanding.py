@@ -132,6 +132,10 @@ def bedrock_converse(config, max_retries=3, retry_delay=1, s3_bucket=None, s3_ke
             
             if inference_config and "maxTokens" in inference_config:
                 inference_config["maxTokens"] = int(inference_config["maxTokens"])
+            if inference_config and "temperature" in inference_config:
+                inference_config["temperature"] = int(inference_config["temperature"])
+            if inference_config and "topP" in inference_config:
+                inference_config["topP"] = int(inference_config["topP"])
 
             # Call Bedrock Converse
             if config.get("toolConfig"):

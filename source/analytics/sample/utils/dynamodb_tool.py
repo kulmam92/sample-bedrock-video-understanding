@@ -178,3 +178,63 @@ def get_frame_outputs(task_id, dynamodb_table=DYNAMO_TABLE_FRAME, output_names=N
             break
 
     return frames
+
+
+def get_task(task_id, dynamodb_table=DYNAMO_TABLE_TASK):
+    """
+    Retrieve a single task by its ID from DynamoDB.
+
+    Args:
+        task_id (str): The ID of the task to retrieve.
+        dynamodb_table (str): DynamoDB table name containing task items.
+
+    Returns:
+        dict or None: The task item with Decimals converted to int/float, or None if not found.
+    """
+    table = dynamodb.Table(dynamodb_table)
+    
+    try:
+        response = table.get_item(Key={'Id': task_id})
+        item = response.get('Item')
+        
+        if item:
+            return convert_decimals(item)
+        return None
+    except Exception as e:
+        print(f"Error retrieving task {task_id}: {e}")
+        return None
+
+def get_tasks_by_type(task_type=None, dynamodb_table='bedrock_mm_extr_srv_video_task'):
+    """
+    Retrieve all tasks with a specific TaskType from DynamoDB with pagination.
+
+    Args:
+        task_type (str, optional): The TaskType to filter by (e.g., 'clip', 'frame').
+                                   If None, returns all tasks. Defaults to None.
+        dynamodb_table (str): DynamoDB table name containing task items.
+
+    Returns:
+        list[dict]: List of task items with Decimals converted to int/float.
+    """
+    table = dynamodb.Table(dynamodb_table)
+    tasks = []
+    last_evaluated_key = None
+
+    while True:
+        scan_params = {}
+        
+        # Only add FilterExpression if task_type is provided
+        if last_evaluated_key:
+            scan_params["ExclusiveStartKey"] = last_evaluated_key
+
+        response = table.scan(**scan_params)
+        items = convert_decimals(response.get('Items', []))
+        for item in items:
+            if item.get("Request",{}).get("TaskType") == task_type:
+                tasks.append(item)
+
+        last_evaluated_key = response.get('LastEvaluatedKey')
+        if not last_evaluated_key:
+            break
+
+    return tasks

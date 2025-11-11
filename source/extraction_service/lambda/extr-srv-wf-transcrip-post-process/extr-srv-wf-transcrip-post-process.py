@@ -42,12 +42,14 @@ def lambda_handler(event, context):
                 vtt_key = c["Key"]
 
     # Get transcription result from S3
+    trans_data = None
     if trans_key:
         response = s3.get_object(Bucket=s3_bucket, Key=trans_key)
         file_content = response['Body'].read().decode('utf-8')
         trans_data = json.loads(file_content)
     
     # Get subtitle from S3
+    subtitle_data = None
     if vtt_key:
         subtitle_data = read_vtt(s3_bucket, vtt_key)
     
@@ -57,14 +59,14 @@ def lambda_handler(event, context):
         doc = utils.dynamodb_get_by_id(DYNAMO_VIDEO_TASK_TABLE, id=task_id)
     except Exception as ex:
         print('Doc does not exist',ex)
-    
+
     if doc is not None:
         # Update video task: metadata.transcription output
         try:
             metadata = doc.get("MetaData", {})
             if "Audio" not in metadata:
                 metadata["Audio"] = {"Language": None}
-            if not metadata["Audio"].get("Language"):
+            if not metadata["Audio"].get("Language") and trans_data:
                 metadata["Audio"]["Language"] = trans_data["results"]["language_code"]
 
                 doc["MetaData"] = metadata
@@ -79,10 +81,11 @@ def lambda_handler(event, context):
         # Update transciption to DB
         try:
             # add transcription to db: video_transcription
-            for sub in subtitle_data:
-                sub["id"] = f"{task_id}_{sub['start_ts']}_{sub['end_ts']}"
-                sub["task_id"] = task_id
-                utils.dynamodb_table_upsert(DYNAMO_VIDEO_TRANS_TABLE, utils.convert_to_dynamo_format(sub))
+            if subtitle_data:
+                for sub in subtitle_data:
+                    sub["id"] = f"{task_id}_{sub['start_ts']}_{sub['end_ts']}"
+                    sub["task_id"] = task_id
+                    utils.dynamodb_table_upsert(DYNAMO_VIDEO_TRANS_TABLE, utils.convert_to_dynamo_format(sub))
         except Exception as ex:
             print('Failed to update transcription to DB',ex)
 

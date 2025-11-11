@@ -45,11 +45,11 @@ def lambda_handler(event, context):
             print(ex)
 
     # Read image frames from S3
-    s3_bucket = task["MetaData"]["VideoFrameS3"]["S3Bucket"]
-    s3_prefix = task["MetaData"]["VideoFrameS3"]["S3Prefix"]
-    total_frames = task["MetaData"]["VideoFrameS3"]["TotalFramesPlaned"]
+    s3_bucket = task.get("MetaData",{}).get("VideoFrameS3",{}).get("S3Bucket")
+    s3_prefix = task.get("MetaData",{}).get("VideoFrameS3",{}).get("S3Prefix")
+    total_frames = task.get("MetaData",{}).get("VideoFrameS3",{}).get("TotalFramesPlaned")
 
-    video_duration = float(task["MetaData"]["VideoMetaData"]["Duration"])
+    video_duration = float(task.get("MetaData",{}).get("VideoMetaData",{}).get("Duration",0))
     timestamps = generate_sample_timestamps(task["Request"].get("PreProcessSetting"), video_duration, start_ts, end_ts)
 
     prev_ts, prev_vector, total_sampled = start_ts, None, 0

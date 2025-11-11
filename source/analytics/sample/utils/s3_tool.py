@@ -38,27 +38,31 @@ def get_transcripts(task_id, s3_bucket=S3_BUCKET_NAME):
     """
     s3_key = S3_KEY_TEMPLATE_TRANSCRIPT_VTT.format(task_id=task_id)
 
-    s3_clientobj = s3.Object(s3_bucket, s3_key)
-    s3_clientdata = s3_clientobj.get()["Body"].read().decode("utf-8")
-
     subtitles = []
-    blocks = re.split(r'\n{2,}', s3_clientdata.strip())
-    for block in blocks:
-        lines = block.split('\n')
-        if len(lines) <= 1:
-            continue
-
-        index = int(lines[0]) if lines[0].isdigit() else None
-        timecodes = re.findall(r'(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})', lines[1])
-        text = '\n'.join(lines[2:]).strip() if len(lines) > 2 else None
-
-        if index is not None and timecodes and text is not None:
-            start_ts, end_ts = timecodes[0]
-            subtitles.append({
-                "start_ts": convert_timestamp_to_ms(start_ts),
-                "end_ts": convert_timestamp_to_ms(end_ts),
-                "transcription": text
-            })
+    try:
+        s3_clientobj = s3.Object(s3_bucket, s3_key)
+        s3_clientdata = s3_clientobj.get()["Body"].read().decode("utf-8")
+    
+        
+        blocks = re.split(r'\n{2,}', s3_clientdata.strip())
+        for block in blocks:
+            lines = block.split('\n')
+            if len(lines) <= 1:
+                continue
+    
+            index = int(lines[0]) if lines[0].isdigit() else None
+            timecodes = re.findall(r'(\d{2}:\d{2}:\d{2}\.\d{3}) --> (\d{2}:\d{2}:\d{2}\.\d{3})', lines[1])
+            text = '\n'.join(lines[2:]).strip() if len(lines) > 2 else None
+    
+            if index is not None and timecodes and text is not None:
+                start_ts, end_ts = timecodes[0]
+                subtitles.append({
+                    "start_ts": convert_timestamp_to_ms(start_ts),
+                    "end_ts": convert_timestamp_to_ms(end_ts),
+                    "transcription": text
+                })
+    except Exception as ex:
+        print("No audio transcription")
 
     return subtitles
 

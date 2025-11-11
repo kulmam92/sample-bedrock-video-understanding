@@ -45,9 +45,9 @@ def lambda_handler(event, context):
     timestamps = generate_sample_timestamps(task["Request"].get("PreProcessSetting"), video_clip.duration, start_ts, end_ts)
 
     # Create image frames
-    resolution = task["MetaData"]["VideoMetaData"].get("Resolution")
+    resolution = task["MetaData"].get("VideoMetaData",{}).get("Resolution")
     width, height = None, None
-    if resolution is None or len(resolution) == 0:
+    if resolution and len(resolution) > 0:
         width = float(resolution[0])
         height = float(resolution[1])
     need_resize = width is None or width > IMAGE_MAX_WIDTH or height is None or resolution[1] > IMAGE_MAX_HEIGHT

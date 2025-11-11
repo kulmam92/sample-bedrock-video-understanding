@@ -49,23 +49,7 @@ def lambda_handler(event, context):
         input_bytes = ""
     if len(search_text) > 0:
         search_text = search_text.strip()
-    
-    # Get Tasks by RequestBy
-    db_tasks = utils.get_tasks_by_requestby(
-                table_name=DYNAMO_VIDEO_TASK_TABLE, 
-                request_by=request_by
-            )
 
-    if db_tasks is None or len(db_tasks) == 0:
-        return {
-            'statusCode': 200,
-            'body': []
-        }
-
-    tasks = {}
-    for task in db_tasks:
-        tasks[task["Id"]] = task
-    
     if search_text or input_bytes:
         input_embedding = None
         #s3_prefix_output = f'tasks/tlabs/search/{uuid.uuid4()}/'
@@ -83,7 +67,7 @@ def lambda_handler(event, context):
                 tid = clip.get("metadata",{}).get("task_id")
                 idx = clip.get("metadata",{}).get("index")
                 if tid and idx:
-                    task = tasks.get(tid)
+                    task = utils.dynamodb_get_by_id(DYNAMO_VIDEO_TASK_TABLE, tid, "Id")
 
                     # Get shot
                     shot_outputs = None
