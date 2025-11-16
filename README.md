@@ -55,6 +55,55 @@ Multimodal embedding is an emerging approach to video understanding, particularl
 
 ![embedding](./assets/mme-diagram.png)
 
+## Token usage and cost estimation
+Understanding the cost implications of different video analysis workflows is crucial for optimizing your solution. The Video Understanding Tool provides built-in token usage tracking and cost estimation to help you make informed decisions about model selection and workflow configuration.
+
+For each processed video, the tool generates a detailed cost breakdown by model type. The example below shows a shot-based analysis with shot summaries enabled for each segment. 
+
+> Note that cost estimates cover Amazon Bedrock foundation models and Amazon Transcribe for audio transcription—designed to provide visibility into cost allocation across services. For formal proof-of-concept or production deployments, we recommend conducting a comprehensive cost analysis that includes all AWS services involved.
+
+![token usage](/assets/token-usage.png)
+
+## Access metadata from the video understanding tool
+The tool is designed for video metadata extraction using different pipeline styles. Metadata retrieved from visual and audio analysis, as well as embeddings, are stored in tool-managed AWS resources. You can access this data through multiple methods:
+
+**Amazon S3 storage:**
+- **Bucket name:** `bedrock-mm-{account_id}-{region}`
+- **Key prefixes by data type:**
+  - Uploaded videos: `tasks/{task_id}/upload/`
+  - Frame images: `tasks/{task_id}/video_frame_/`
+  - Frame analysis outputs: `tasks/{task_id}/frame_outputs/`
+  - Shot clips: `tasks/{task_id}/shot_clip/`
+  - Shot analysis outputs: `tasks/{task_id}/shot_outputs/`
+  - Shot embeddings: `tasks/{task_id}/shot_vector/`
+  - Audio transcription: `tasks/{task_id}/transcribe/`
+- Raw foundation model outputs stored in JSON or text format
+- Complete task metadata for each processed video
+- Ideal for archival, audit trails, and accessing unprocessed model responses
+
+**Amazon DynamoDB:**
+- **Extraction Service tables:**
+  - `bedrock_mm_extr_srv_video_task` - Video processing task metadata
+  - `bedrock_mm_extr_srv_video_frame` - Frame-level analysis results
+  - `bedrock_mm_extr_srv_video_shot` - Shot-level analysis results
+  - `bedrock_mm_extr_srv_video_transcript` - Audio transcription data
+- **Nova Service table:**
+  - `bedrock_mm_nova_video_task` - Nova multimodal embedding tasks
+- **TwelveLabs Service table:**
+  - `bedrock_mm_tlabs_video_task` - TwelveLabs Marengo embedding tasks
+- **Usage tracking:**
+  - `bedrock_mm_usage` - Token usage and cost tracking across all services
+- Structured data in a standardized, easy-to-process JSON format
+- Optimized for querying and filtering by video, timestamp, or analysis type
+- Enables efficient retrieval for downstream analytics and applications
+
+**Programmatic API:**
+- Invoke processing tasks and retrieve results without using the UI
+- Practical for bulk processing, automation, and integration into existing pipelines
+- Sample code provided for common access patterns
+
+This flexible access model allows you to integrate the tool into your workflows—whether you're conducting exploratory analysis in notebooks, building automated pipelines, or developing production applications.
+For detailed examples, see the notebooks located in [/source/analytics/sample](/source/analytics/sample).
 
 ## System Architecture
 ![architecture](./assets/system-architecture.png)
