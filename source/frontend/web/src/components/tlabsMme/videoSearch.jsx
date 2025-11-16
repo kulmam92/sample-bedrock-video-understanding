@@ -297,7 +297,10 @@ class VideoSearch extends React.Component {
                             const defaultOption = newModelId === "marengo30" ? ["visual"] : ["visual-image"];
                             this.setState({
                                 selectedModelId: newModelId,
-                                selectedEmbeddingOptions: defaultOption
+                                selectedEmbeddingOptions: defaultOption,
+                                embedSearchItems: [],
+                                filterText: "",
+                                inputBytes: null
                             }, () => this.searchAll());
                         }}
                         tabs={[

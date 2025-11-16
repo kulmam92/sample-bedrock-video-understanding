@@ -10,6 +10,7 @@ import VideoPlayer from './videoPlayer';
 import {DecimalToTimestamp} from "../../resources/utility"
 import Diagram from "../../static/frame-based-diagram.png"
 import Architecture from "../../static/frame-based-architecture.png"
+import StepFunctionWorkflow from "../../static/frame_graph.svg"
 
 class VideoSearch extends React.Component {
 
@@ -269,7 +270,12 @@ class VideoSearch extends React.Component {
                                 {
                                     label: "Architecture",
                                     id: "architecture",
-                                    content: <div><img max-width={"100%"} src={Architecture}></img></div>
+                                    content: <div className='center'><img width={"100%"} src={Architecture}></img></div>
+                                },
+                                {
+                                    label: "Step Function Workflow",
+                                    id: "stepfunction",
+                                    content: <div className='center'><img width={"100%"} src={StepFunctionWorkflow}></img></div>
                                 },
                             ]}
                             />

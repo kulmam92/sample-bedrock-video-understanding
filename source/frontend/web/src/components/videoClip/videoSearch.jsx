@@ -9,6 +9,7 @@ import {DecimalToTimestamp} from "../../resources/utility"
 import Diagram from "../../static/shot-based-diagram.png"
 import FlowDiagram from "../../static/shot-based-flow.png"
 import Architecture from "../../static/shot-based-architecture.png"
+import StepFunctionWorkflow from "../../static/shot_graph.svg"
 import BroomIcon from "../../static/broom_button_icon.svg"
 
 class VideoSearch extends React.Component {
@@ -361,6 +362,11 @@ class VideoSearch extends React.Component {
                                 label: "Architecture",
                                 id: "architecture",
                                 content: <div className='center'><img width={"100%"} src={Architecture}></img></div>
+                            },
+                            {
+                                label: "Step Function Workflow",
+                                id: "stepfunction",
+                                content: <div className='center'><img width={"100%"} src={StepFunctionWorkflow}></img></div>
                             },
                         ]}
                         />
