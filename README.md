@@ -16,6 +16,8 @@ This video understanding tool allows you to upload videos, experiment with diffe
   - [Frame-based workflow](#frame-based-workflow)
   - [Shot-base workflow](#shot-base-workflow)
   - [Video Embedding](#video-embedding)
+- [Token usage and cost estimation](#token-usage-and-cost-estimation)
+- [Access metadata from the video understanding tool](#access-metadata-from-the-video-understanding-tool)
 - [System architecture](#system-architecture)
   - [🎬 Extraction Service](#extraction-service)
   - [🤖 Nova Service](#nova-service)
