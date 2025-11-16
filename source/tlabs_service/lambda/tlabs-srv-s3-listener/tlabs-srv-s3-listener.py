@@ -13,12 +13,13 @@ from datetime import datetime, timezone
 DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
 TLABS_S3_VECTOR_BUCKET = os.environ.get("TLABS_S3_VECTOR_BUCKET")
 TLABS_S3_VECTOR_INDEX = os.environ.get("TLABS_S3_VECTOR_INDEX")
+TLABS_S3_VECTOR_INDEX_30 = os.environ.get("TLABS_S3_VECTOR_INDEX_30")
+DYNAMO_VIDEO_USAGE_TABLE = os.environ.get("DYNAMO_VIDEO_USAGE_TABLE")
 
 s3 = boto3.client('s3')
 s3vectors = boto3.client('s3vectors') 
 
 def lambda_handler(event, context):
-    #print(json.dumps(event))
     if event is None or "detail" not in event:
         return {
             'statusCode': 400,
@@ -59,7 +60,8 @@ def lambda_handler(event, context):
     # Add embeddings to S3 Vector: batch size 100
     embeddings, batch_size, counter = [], 200, 0
     for o in output:
-        embeddings.append({
+        index_name = TLABS_S3_VECTOR_INDEX
+        embed = {
                 "key": f'{task_id}_{o["embeddingOption"]}_{o["startSec"]}_{o["endSec"]}',
                 "data": {"float32": o["embedding"]},
                 "metadata": {
@@ -68,14 +70,21 @@ def lambda_handler(event, context):
                     "startSec": o["startSec"], 
                     "endSec": o["endSec"]
                 }
-            })
+            }
+        
+        if "embeddingScope" in o:
+            # Marengo 3.0 embedding
+            index_name = TLABS_S3_VECTOR_INDEX_30
+            embed["metadata"]["embeddingScope"] = o["embeddingScope"]
+
+        embeddings.append(embed)
         
         counter += 1
         if len(embeddings) >= batch_size or counter >= len(output):
             # Write embeddings into vector index with metadata.
             s3vectors.put_vectors(
                 vectorBucketName=TLABS_S3_VECTOR_BUCKET,   
-                indexName=TLABS_S3_VECTOR_INDEX,   
+                indexName=index_name,   
                 vectors=embeddings
             )
             embeddings = []
@@ -92,6 +101,11 @@ def lambda_handler(event, context):
         
             # update DB: video_task
             utils.dynamodb_table_upsert(DYNAMO_VIDEO_TASK_TABLE, doc)
+
+            # store usage
+            model_id = doc.get("Request",{}).get("ModelId")
+            duration_s = doc.get("MetaData",{}).get("VideoMetaData", {}).get("Duration", 0)
+            update_usage_to_db(task_id, model_id, duration_s)
     except Exception as ex:
         print('Doc does not exist',ex)
     
@@ -101,3 +115,15 @@ def lambda_handler(event, context):
         'body': 'Task completed.'
     }
 
+def update_usage_to_db(task_id, model_id, duration_s):
+    usage = {
+        "id": f"{task_id}_talbs_mme",
+        "index": None,
+        "type": "tlabs_mme_video",
+        "name": "TwelveLabs Marengo video embedding",
+        "task_id": task_id,
+        "model_id": model_id,
+        "duration_s": duration_s
+    }
+    utils.dynamodb_table_upsert(DYNAMO_VIDEO_USAGE_TABLE, usage)    
+    return usage

@@ -162,6 +162,8 @@ class NovaServiceStack(NestedStack):
                         resources=[
                             f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_TASK_TABLE}/index/*",
                             f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_TASK_TABLE}",
+                            f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_USAGE_TABLE}/index/*",
+                            f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_USAGE_TABLE}",
                         ]
                     ) 
                 ]
@@ -182,6 +184,8 @@ class NovaServiceStack(NestedStack):
                 'DYNAMO_VIDEO_TASK_TABLE': DYNAMO_VIDEO_TASK_TABLE,
                 'NOVA_S3_VECTOR_BUCKET': S3_VECTOR_BUCKET_NOVA,
                 'NOVA_S3_VECTOR_INDEX': S3_VECTOR_INDEX_NOVA,
+                'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE,
+                'MODEL_ID_BEDROCK_MME': MODEL_ID_BEDROCK_MME
             },
         )
 

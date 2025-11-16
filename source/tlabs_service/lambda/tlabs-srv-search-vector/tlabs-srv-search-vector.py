@@ -1,6 +1,3 @@
-'''
-"Source": mm_embedding | text_embedding | text,
-'''
 import json
 import boto3
 import os
@@ -15,13 +12,17 @@ S3_PRESIGNED_URL_EXPIRY_S = os.environ.get("S3_PRESIGNED_URL_EXPIRY_S", 3600) # 
 S3_BUCKET_DATA = os.environ.get("S3_BUCKET_DATA")
 
 DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
-MODEL_ID_TLAB = 'twelvelabs.marengo-embed-2-7-v1:0'
+MODEL_ID_TLAB_27 = os.environ.get("MODEL_ID_TLAB_27")
+MODEL_ID_TLAB_30 = os.environ.get("MODEL_ID_TLAB_30")
 TLABS_S3_VECTOR_BUCKET = os.environ.get("TLABS_S3_VECTOR_BUCKET")
-TLABS_S3_VECTOR_INDEX = os.environ.get("TLABS_S3_VECTOR_INDEX")
+TLABS_S3_VECTOR_INDEX_27 = os.environ.get("TLABS_S3_VECTOR_INDEX_27")
+TLABS_S3_VECTOR_INDEX_30 = os.environ.get("TLABS_S3_VECTOR_INDEX_30")
 
 s3 = boto3.client('s3')
 bedrock = boto3.client('bedrock-runtime')
 s3vectors = boto3.client('s3vectors') 
+
+MODEL_ID_TLAB, TLABS_S3_VECTOR_INDEX = None, None
 
 def lambda_handler(event, context):
     search_text = event.get("SearchText", "")
@@ -33,8 +34,11 @@ def lambda_handler(event, context):
     input_type = event.get("InputType")
     top_k = event.get("TopK")
     include_video_url = event.get("IncludeVideoUrl", True)
+    task_type = event.get("TaskType")
 
-    embedding_options = event.get("EmbeddingOptions", ["visual-text", "visual-image", "audio"])
+    embedding_options = event.get("EmbeddingOptions")
+    if not embedding_options:
+        embedding_options = ["visual-text", "visual-image", "audio"] if task_type == "marengo27" else ["visual", "audio", "transcription"]
     
     if search_text is None:
         search_text = ""
@@ -42,7 +46,10 @@ def lambda_handler(event, context):
         input_bytes = ""
     if len(search_text) > 0:
         search_text = search_text.strip()
-    
+
+    MODEL_ID_TLAB = MODEL_ID_TLAB_30 if task_type == "marengo30" else MODEL_ID_TLAB_27
+    TLABS_S3_VECTOR_INDEX = TLABS_S3_VECTOR_INDEX_30 if task_type == "marengo30" else TLABS_S3_VECTOR_INDEX_27
+
     # Get Tasks by RequestBy
     db_tasks = utils.get_tasks_by_requestby(
                 table_name=DYNAMO_VIDEO_TASK_TABLE, 
@@ -62,8 +69,7 @@ def lambda_handler(event, context):
     if search_text or input_bytes:
         input_embedding = None
         s3_prefix_output = f'tasks/tlabs/search/{uuid.uuid4()}/'
-        #input_embedding = embed_input_async(input_type, search_text, input_bytes, S3_BUCKET_DATA, s3_prefix_output)
-        input_embedding = get_embedding(input_type, search_text, input_bytes)
+        input_embedding = get_embedding(input_type, search_text, input_bytes, MODEL_ID_TLAB, task_type)
         if not input_embedding:
             return {
                 'statusCode': 500,
@@ -139,36 +145,6 @@ def wait_for_output_file(s3_bucket, s3_prefix, invocation_arn):
                 return json.loads(content).get("data")[0].get("embedding")
     return None
 
-def embed_input_async(input_type, input_text, input_bytes, s3_bucket, s3_prefix_output, model_id=MODEL_ID_TLAB):
-    model_input = {}
-    if input_type == "text":
-        model_input = {
-            "inputType": "text",
-            "inputText": input_text
-        }
-    elif input_type in ["image","video","audio"]:
-        model_input = {
-            "inputType": input_type,
-            "mediaSource": {
-                "base64String": input_bytes
-            }
-        }
-
-    response = bedrock.start_async_invoke(
-        modelId=model_id,
-        modelInput=model_input,
-        outputDataConfig={
-            "s3OutputDataConfig": {
-                "s3Uri": f's3://{s3_bucket}/{s3_prefix_output}'
-            }
-        }
-    )
-
-    invocation_arn = response["invocationArn"]
-    embed =  wait_for_output_file(s3_bucket, s3_prefix_output, invocation_arn)
-    #print(">>>>", embed)
-    return embed
-
 def search_embedding_s3vectors(input_embedding, s3vector_bucket, s3vector_index, embedding_options):
     # Query vector index.
     response = s3vectors.query_vectors(
@@ -184,27 +160,44 @@ def search_embedding_s3vectors(input_embedding, s3vector_bucket, s3vector_index,
     return response["vectors"]
 
 # create embedding using 12labs SaaS API
-def get_embedding(input_type, search_text, input_bytes, model_id="us.twelvelabs.marengo-embed-2-7-v1:0"):
+def get_embedding(input_type, search_text, input_bytes, model_id, task_type):
     model_input = None
     if input_type == "text":
-        model_input = {
-            "inputType": "text",
-            "inputText": search_text
-        }
-    elif input_type == "image":
-        model_input = model_input = {
-            "inputType": "image",
-            "mediaSource": {
-                "base64String": input_bytes
+        if task_type == "marengo27":
+            model_input = {
+                "inputType": "text",
+                "inputText": search_text
             }
-        }
+        else:
+            model_input = {
+                "inputType": "text",
+                "text": {
+                    "inputText": search_text
+                }
+            }
+    elif input_type == "image":
+        if task_type == "marengo27":
+            model_input = {
+                "inputType": "image",
+                "mediaSource": {
+                    "base64String": input_bytes
+                }
+            }
+        else:
+            model_input = {
+                "inputType": "image",
+                "image": {
+                    "mediaSource": {
+                        "base64String": input_bytes
+                    }
+                }
+            }
 
     response = bedrock.invoke_model(
-        modelId=model_id,
+        modelId=f'us.{model_id}',
         body=json.dumps(model_input)
     )
     response_body = json.loads(response['body'].read().decode('utf-8'))
     embedding = response_body.get("data",[{}])[0].get("embedding")
-    #print("!!!", embedding)
     
     return embedding

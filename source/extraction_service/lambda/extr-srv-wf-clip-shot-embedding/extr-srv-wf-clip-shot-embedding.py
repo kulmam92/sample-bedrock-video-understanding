@@ -13,6 +13,7 @@ S3_VECTOR_INDEX = os.environ.get("S3_VECTOR_INDEX")
 S3_BUCKET_DATA = os.environ.get("S3_BUCKET_DATA")
 EMBEDDING_DIM = os.environ.get("EMBEDDING_DIM")
 EMBEDDING_DIM = int(EMBEDDING_DIM) if EMBEDDING_DIM else 1024
+DYNAMO_VIDEO_USAGE_TABLE = os.environ.get("DYNAMO_VIDEO_USAGE_TABLE")
 
 s3 = boto3.client('s3')
 bedrock = boto3.client('bedrock-runtime')
@@ -62,6 +63,9 @@ def lambda_handler(event, context):
     vector_entry = None
     embedding = generate_embedding(s3_bucket, s3_key, model_id = model_id)
     if embedding:
+        # store usage
+        update_usage_to_db(task_id, index, "video segment embedding", model_id, end_time-start_time)
+
         embed_type = "AUDIO_VIDEO"
 
         # Store embedding as JSON to S3
@@ -141,3 +145,16 @@ def generate_embedding(s3_bucket, s3_key, model_id):
     except Exception as ex:
         print(ex)
         return None
+
+def update_usage_to_db(task_id, index, name, model_id, duration_s):
+    usage = {
+        "id": f"{task_id}_{index}_shot",
+        "index": index,
+        "type": "nova_mme_video",
+        "name": name,
+        "task_id": task_id,
+        "model_id": model_id,
+        "duration_s": duration_s
+    }
+    utils.dynamodb_table_upsert(DYNAMO_VIDEO_USAGE_TABLE, usage)    
+    return usage

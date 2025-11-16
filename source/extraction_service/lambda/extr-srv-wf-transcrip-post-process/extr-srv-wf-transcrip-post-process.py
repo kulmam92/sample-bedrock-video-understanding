@@ -6,6 +6,7 @@ import re
 
 DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
 DYNAMO_VIDEO_TRANS_TABLE = os.environ.get("DYNAMO_VIDEO_TRANS_TABLE")
+DYNAMO_VIDEO_USAGE_TABLE = os.environ.get("DYNAMO_VIDEO_USAGE_TABLE")
 
 TRANSCRIPTION_S3_PREFIX_TEMPLATE = "tasks/{task_id}/transcribe/"
 
@@ -75,6 +76,11 @@ def lambda_handler(event, context):
             
                 # update DB: video_task
                 utils.dynamodb_table_upsert(DYNAMO_VIDEO_TASK_TABLE, utils.convert_to_dynamo_format(doc))
+
+                # update DB: usage
+                duration_s = metadata.get("VideoMetaData",{}).get("Duration", 0)
+                print("!!!!!", duration_s)
+                update_usage_to_db(task_id, "amazon_transcribe", duration_s)
         except Exception as ex:
             print('Failed to update video task status',ex)
 
@@ -129,3 +135,16 @@ def convert_timestamp_to_ms(timestamp):
     except ValueError as e:
         print(f"Error converting timestamp: {e}")
         return None
+
+def update_usage_to_db(task_id, model_id, duration_s):
+    usage = {
+        "id": f"{task_id}_transcribe",
+        "index": None,
+        "type": "transcribe",
+        "name": "audio transcription",
+        "task_id": task_id,
+        "model_id": model_id,
+        "duration_s": duration_s
+    }
+    utils.dynamodb_table_upsert(DYNAMO_VIDEO_USAGE_TABLE, usage)    
+    return usage

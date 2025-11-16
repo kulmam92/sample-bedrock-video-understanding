@@ -125,7 +125,14 @@
 }
 .mmevideosearch .searchinput .upload {
     margin: 20px 0px 10px 20px;
-    width: 300px;
+    display: inline-block;
+}
+
+.mmevideosearch .searchinput .searchoptions {
+    margin: 20px 0px 10px 20px;
+    display: inline-block;
+    vertical-align: top;
+    display: inline-block;
 }
 
 .mmevideosearch .searchinput .input {

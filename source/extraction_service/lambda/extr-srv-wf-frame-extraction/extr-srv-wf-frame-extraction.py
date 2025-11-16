@@ -15,6 +15,7 @@ import time
 DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
 DYNAMO_VIDEO_FRAME_TABLE = os.environ.get("DYNAMO_VIDEO_FRAME_TABLE")
 DYNAMO_VIDEO_TRANS_TABLE = os.environ.get("DYNAMO_VIDEO_TRANS_TABLE")
+DYNAMO_VIDEO_USAGE_TABLE = os.environ.get("DYNAMO_VIDEO_USAGE_TABLE")
 
 LOCAL_PATH = '/tmp/'
 
@@ -62,8 +63,18 @@ def lambda_handler(event, context):
         frame["frame_outputs"] = []
         for config in promptConfigs:
             response = bedrock_converse(config=config, image_s3_bucket=s3_bucket, image_s3_key=s3_key)
+
+            # Parse usage
+            if "usage" in response:
+                input_tokens = response["usage"]["inputTokens"]
+                output_tokens = response["usage"]["outputTokens"]
+                total_tokens = response["usage"]["totalTokens"]
+
+                # store to the usage table
+                update_usage_to_db(task_id, ts, config["name"], config["modelId"], input_tokens, output_tokens, total_tokens)
+
             custom_output = parse_converse_response(response)
-            print(custom_output)
+
             frame["frame_outputs"].append({
                 "name": config["name"], 
                 "model_id": config["modelId"],
@@ -160,3 +171,18 @@ def bedrock_converse(config, max_retries=3, retry_delay=1, image_s3_bucket=None,
             time.sleep(retry_delay)
 
     return None
+
+def update_usage_to_db(task_id, index, name, model_id, input_tokens, output_tokens, total_tokens):
+    usage = {
+        "id": f"{task_id}_{index}_{name}_frame",
+        "index": index,
+        "type": "image_understanding",
+        "name": name,
+        "task_id": task_id,
+        "model_id": model_id,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": total_tokens
+    }
+    utils.dynamodb_table_upsert(DYNAMO_VIDEO_USAGE_TABLE, usage)    
+    return usage

@@ -312,7 +312,7 @@ class VideoUpload extends React.Component {
                         title: "Embedding setting",
                         content: (
                             <SpaceBetween direction="vertical" size="l">
-                              <VideoMmEmbeddingSetting ref={this.mmEmbedSettingRef} />
+                              <VideoMmEmbeddingSetting ref={this.mmEmbedSettingRef} selectedModelId={this.props.selectedModelId} />
                             </SpaceBetween>
                         ),
                         },

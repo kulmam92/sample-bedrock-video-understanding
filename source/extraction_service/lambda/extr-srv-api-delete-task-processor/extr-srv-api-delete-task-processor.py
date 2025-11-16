@@ -14,6 +14,7 @@ TRANSCRIBE_JOB_PREFIX = os.environ.get("TRANSCRIBE_JOB_PREFIX")
 DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
 DYNAMO_VIDEO_FRAME_TABLE = os.environ.get("DYNAMO_VIDEO_FRAME_TABLE")
 DYNAMO_VIDEO_TRANS_TABLE = os.environ.get("DYNAMO_VIDEO_TRANS_TABLE")
+DYNAMO_VIDEO_USAGE_TABLE = os.environ.get("DYNAMO_VIDEO_USAGE_TABLE")
 S3_BUCKET_DATA = os.environ.get("S3_BUCKET_DATA")
 
 S3_VECTOR_BUCKET = os.environ.get("S3_VECTOR_BUCKET")
@@ -73,7 +74,12 @@ def lambda_handler(event, context):
         utils.dynamodb_delete_task_by_id(DYNAMO_VIDEO_TASK_TABLE, task_id)
     except Exception as ex:
         print(f'Failed to delete task {task_id} from index: {DYNAMO_VIDEO_TASK_TABLE}', ex)
-        
+    
+    # Delete token usage
+    try:
+        utils.dynamodb_delete_usage_by_taskid(DYNAMO_VIDEO_USAGE_TABLE, task_id)
+    except Exception as ex:
+        print(f'Failed to delete task {task_id} from index: {DYNAMO_VIDEO_USAGE_TABLE}', ex)
     
     return {
         'statusCode': 200,

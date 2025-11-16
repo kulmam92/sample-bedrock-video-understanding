@@ -5,6 +5,7 @@ import {FormatSeconds} from "../../resources/utility"
 import { Modal, ColumnLayout, Box, Tabs, Alert, Spinner, CopyToClipboard, Link } from '@cloudscape-design/components';
 import VideoTrans from './videoTrans'
 import VideoShots from './videoShots'
+import TokenUsage from '../frameSample/tokenUsage'
 
 class VideoDetail extends React.Component {
 
@@ -94,6 +95,11 @@ class VideoDetail extends React.Component {
                     label: "Transcription",
                     id: "transcription",
                     content: <VideoTrans taskId={this.state.item.Request.TaskId} OnSubtitleClick={this.handleTimestampClick} Language={this.state.item?.MetaData?.Audio?.Language} />
+                },
+                {
+                    label: "Token Usage & Cost",
+                    id: "usage",
+                    content: <TokenUsage taskId={this.state.item.Request.TaskId} />
                 },
             ]
         

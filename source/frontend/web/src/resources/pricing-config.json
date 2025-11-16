@@ -1,0 +1,77 @@
+{
+  "us-east-1": {
+    "amazon.nova-2-multimodal-embeddings-v1:0": {
+      "nova_mme_video": {
+        "price_per_second": 0.0007,
+        "unit": "second"
+      },
+      "nova_mme_image": {
+        "price_per_image": 0.00006,
+        "unit": "image"
+      }
+    },
+    "amazon.nova-lite-v1:0": {
+      "image_understanding": {
+        "price_per_1k_input_tokens": 0.00006,
+        "price_per_1k_output_tokens": 0.00024,
+        "unit": "token"
+      },
+      "video_understanding": {
+        "price_per_1k_input_tokens": 0.00006,
+        "price_per_1k_output_tokens": 0.00024,
+        "unit": "token"
+      }
+    },
+    "amazon.nova-pro-v1:0": {
+      "image_understanding": {
+        "price_per_1k_input_tokens": 0.0008,
+        "price_per_1k_output_tokens": 0.0032,
+        "unit": "token"
+      },
+      "video_understanding": {
+        "price_per_1k_input_tokens": 0.0008,
+        "price_per_1k_output_tokens": 0.0032,
+        "unit": "token"
+      }
+    },
+    "amazon_transcribe": {
+      "transcribe": {
+        "price_per_second": 0.0004,
+        "unit": "second"
+      }
+    },
+    "us.anthropic.claude-haiku-4-5-20251001-v1:0": {
+      "image_understanding": {
+        "price_per_1k_input_tokens": 0.001,
+        "price_per_1k_output_tokens": 0.005,
+        "unit": "token"
+      }
+    },
+    "us.anthropic.claude-sonnet-4-5-20250929-v1:0": {
+      "image_understanding": {
+        "price_per_1k_input_tokens": 0.003,
+        "price_per_1k_output_tokens": 0.015,
+        "unit": "token"
+      }
+    },
+    "us.meta.llama4-scout-17b-instruct-v1:0": {
+      "image_understanding": {
+        "price_per_1k_input_tokens": 0.00017,
+        "price_per_1k_output_tokens": 0.00066,
+        "unit": "token"
+      }
+    },
+    "twelvelabs.marengo-embed-2-7-v1:0": {
+      "tlabs_mme_video": {
+        "price_per_second": 0.0007,
+        "unit": "second"
+      }
+    },
+    "twelvelabs.marengo-embed-3-0-v1:0": {
+      "tlabs_mme_video": {
+        "price_per_second": 0.0007,
+        "unit": "second"
+      }
+    }
+  }
+}

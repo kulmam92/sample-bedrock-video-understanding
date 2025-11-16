@@ -7,6 +7,7 @@ S3_VECTOR_INDEX_DIM_NOVA = "1024"
 # Main Stack
 API_NAME_PREFIX = 'bedrock-mm-nova-mme'
 DYNAMO_VIDEO_TASK_TABLE = "bedrock_mm_nova_video_task"
+DYNAMO_VIDEO_USAGE_TABLE="bedrock_mm_usage"
 
 LAMBDA_NAME_PREFIX='bedrock-mm-'
 

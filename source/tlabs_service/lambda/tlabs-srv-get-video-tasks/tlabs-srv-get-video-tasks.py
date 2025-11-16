@@ -33,8 +33,8 @@ def lambda_handler(event, context):
     result = []
     if tasks:
         for task in tasks:
-            tt = task.get("Request",{}).get("TaskType", "frame")
-            if task_type == tt:
+            tt = task.get("Request",{}).get("TaskType")
+            if tt and task_type == tt:
                 r = {
                         "TaskId": task["Id"],
                         "FileName": task["Request"]["FileName"],

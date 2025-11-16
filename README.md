@@ -2,6 +2,14 @@
 
 > This solution is available as a CDK package and can be deployed to your AWS account by running just a few simple scripts.
 
+## 🆕 Recent Updates
+
+- **Token and Cost Estimation**: Added real-time token usage tracking and cost estimation for all video analysis workflows, helping you monitor and optimize your spending
+- **TwelveLabs Marengo 3.0**: TwelveLabs video embeddings now support both v2.7 and the latest v3.0, enabling side-by-side comparison
+- **Embedding-based Search**: Both Nova Multimodal Embedding and TwelveLabs workflows now support advanced embedding option-based search capabilities for more efficient video retrieval
+
+-----
+
 Understanding video content is inherently complex, as it combines visual, auditory, and temporal information that must be analyzed together for meaningful insights. Different use cases — such as media scene analysis, ad break detection, IP camera tracking, or social media moderation — often require distinct workflows with varying cost, accuracy, and latency trade-offs.
 
 An increasing number of multimodal understanding models and features are now available on Amazon Bedrock.
@@ -51,7 +59,7 @@ This approach leverages the flexibility of video understanding models while addr
 ![shot-flow](./assets/shot-based-flow.png)
 
 ### Video Embedding
-Multimodal embedding is an emerging approach to video understanding, particularly popular for video search. In this tool, we offer two workflows that leverage different video embedding models available on Amazon Bedrock: Nova Multimodal Embedding and TwelveLabs Marengo 2.7. You can upload your videos to these pipelines and perform searches using both text and image inputs.
+Multimodal embedding is an emerging approach to video understanding, particularly popular for video search. In this tool, we offer two workflows that leverage different video embedding models available on Amazon Bedrock: Nova Multimodal Embedding and TwelveLabs Marengo 2.7 and 3.0. You can upload your videos to these pipelines and perform embedding-based searches using both text and image inputs, enabling efficient semantic video retrieval.
 
 ![embedding](./assets/mme-diagram.png)
 
@@ -75,11 +83,11 @@ This subsystem includes two customized workflows: frame-based and shot-based. It
 
 <a id="nova-service"></a>
 ### 🤖 **Nova Service**
-Provides the backend logic for **Nova Multimodal Embedding**.
+Provides the backend logic for **Nova Multimodal Embedding** with support for embedding-based video search.
 
 <a id="tlabs-service"></a>
 ### 🧪 **TwelveLabs Service**
-Provides the backend logic for **TwelveLabs Marengo Embedding**.
+Provides the backend logic for **TwelveLabs Marengo 2.7 and 3.0 Embedding** with support for embedding-based video search.
 
 Both of these embedding workflows share a similar architecture, as follows:
 
@@ -92,7 +100,7 @@ The tool includes an **Agent chatbot** that allows you to consult with an AI ass
 
 <a id="frontend"></a>
 ### 🌐 **Frontend Service**
-A **React** static website served via **CloudFront** and backed by an **S3** bucket. It provides a user interface to select workflows, upload videos, configure settings, and view extraction results. The site also includes a chatbot UI for interacting with the consulting agent.
+A **React** static website served via **CloudFront** and backed by an **S3** bucket. It provides a user interface to select workflows, upload videos, configure settings, and view extraction results. The site includes real-time token usage and cost estimation displays, embedding-based search capabilities, and a chatbot UI for interacting with the consulting agent.
 
 <a id="analytics-service"></a>
 ### 📊 **Analytics Service**

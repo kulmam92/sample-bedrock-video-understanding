@@ -13,12 +13,14 @@ from datetime import datetime, timezone
 DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
 NOVA_S3_VECTOR_BUCKET = os.environ.get("NOVA_S3_VECTOR_BUCKET")
 NOVA_S3_VECTOR_INDEX = os.environ.get("NOVA_S3_VECTOR_INDEX")
+DYNAMO_VIDEO_USAGE_TABLE = os.environ.get("DYNAMO_VIDEO_USAGE_TABLE")
+MODEL_ID_BEDROCK_MME = os.environ.get("MODEL_ID_BEDROCK_MME")
 
 s3 = boto3.client('s3')
 s3vectors = boto3.client('s3vectors') 
 
 def lambda_handler(event, context):
-    #print(json.dumps(event))
+    print(json.dumps(event))
     if event is None or "detail" not in event:
         return {
             'statusCode': 400,
@@ -106,6 +108,10 @@ def lambda_handler(event, context):
         
             # update DB: video_task
             utils.dynamodb_table_upsert(DYNAMO_VIDEO_TASK_TABLE, doc)
+
+            # store usage
+            duration_s = doc.get("MetaData",{}).get("VideoMetaData", {}).get("Duration", 0)
+            update_usage_to_db(task_id, MODEL_ID_BEDROCK_MME, duration_s)
     except Exception as ex:
         print('Doc does not exist',ex)
     
@@ -115,3 +121,15 @@ def lambda_handler(event, context):
         'body': 'Task completed.'
     }
 
+def update_usage_to_db(task_id, model_id, duration_s):
+    usage = {
+        "id": f"{task_id}_nova_mme",
+        "index": None,
+        "type": "nova_mme_video",
+        "name": None,
+        "task_id": task_id,
+        "model_id": model_id,
+        "duration_s": duration_s
+    }
+    utils.dynamodb_table_upsert(DYNAMO_VIDEO_USAGE_TABLE, usage)    
+    return usage

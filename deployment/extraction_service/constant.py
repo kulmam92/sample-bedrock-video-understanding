@@ -20,6 +20,7 @@ DYNAMO_VIDEO_TASK_TABLE="bedrock_mm_extr_srv_video_task"
 DYNAMO_VIDEO_TRANS_TABLE="bedrock_mm_extr_srv_video_transcript"
 DYNAMO_VIDEO_FRAME_TABLE="bedrock_mm_extr_srv_video_frame"
 DYNAMO_VIDEO_SHOT_TABLE="bedrock_mm_extr_srv_video_shot"
+DYNAMO_VIDEO_USAGE_TABLE="bedrock_mm_usage"
 
 VIDEO_UPLOAD_S3_PREFIX='upload'
 VIDEO_SAMPLE_CHUNK_DURATION_S="600"

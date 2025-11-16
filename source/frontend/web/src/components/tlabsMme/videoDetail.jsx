@@ -4,6 +4,7 @@ import { FetchPost } from "../../resources/data-provider";
 import {FormatSeconds} from "../../resources/utility"
 import { Modal, ColumnLayout, Box, Tabs, Alert, Spinner, CopyToClipboard, Link } from '@cloudscape-design/components';
 import VideoClips from "./videoClips";
+import TokenUsage from '../frameSample/tokenUsage';
 
 class VideoDetail extends React.Component {
 
@@ -86,7 +87,12 @@ class VideoDetail extends React.Component {
                     label: "Clips",
                     id: "clips",
                     content: <VideoClips item={this.state.item} OnClipClick={this.handleTimestampClick}/>
-                }
+                },
+                {
+                    label: "Token Usage & Cost",
+                    id: "usage",
+                    content: <TokenUsage taskId={this.state.item.Request.TaskId} />
+                },
             ]
         return tabs;
     }

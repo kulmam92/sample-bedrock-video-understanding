@@ -68,6 +68,46 @@ def dynamodb_delete_frames_by_taskid(table_name, task_id):
     #except Exception as e:
     #    print(f"Error deleting items from table {table_name}: {str(e)}")
 
+def dynamodb_delete_usage_by_taskid(table_name, task_id):
+    #try:
+        table = dynamodb.Table(table_name)
+
+        pagination_token = None
+
+        # Loop until all items are deleted
+        while True:
+            # Query for items with the given task_id
+            if pagination_token:
+                response = table.query(
+                    IndexName=table_name,
+                    KeyConditionExpression=Key('task_id').eq(task_id),  # Use the task_id to query the index
+                    ExclusiveStartKey=last_evaluated_key,
+                    Limit=1000
+                )
+            else:
+                response = table.query(
+                    IndexName='task_id-type-index',  # Specify the secondary index name
+                    KeyConditionExpression=Key('task_id').eq(task_id),  # Use the task_id to query the index
+                    Limit=1000
+                )
+
+            # Delete each item returned by the query
+            for item in response['Items']:
+                table.delete_item(
+                    Key={
+                        'id': item['id'],  # Replace with your partition key name
+                        'task_id': item['task_id']  # Replace with your sort key name
+                    }
+                )
+
+            # Check if there are more items to fetch
+            if 'LastEvaluatedKey' in response:
+                pagination_token = response['LastEvaluatedKey']
+            else:
+                break
+    #except Exception as e:
+    #    print(f"Error deleting items from table {table_name}: {str(e)}")
+
 def dynamodb_delete_analysis_by_taskid(table_name, task_id):
     #try:
         table = dynamodb.Table(table_name)

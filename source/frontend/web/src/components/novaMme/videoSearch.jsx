@@ -1,6 +1,6 @@
 import React, {createRef} from 'react';
 import './videoSearch.css'
-import { Button, Link, FileInput, Alert, Spinner, Icon, Modal, Box, SpaceBetween, Badge, ExpandableSection, Tabs, Container } from '@cloudscape-design/components';
+import { Button, Link, FileInput, Alert, Spinner, Icon, Modal, Box, SpaceBetween, Badge, ExpandableSection, Tabs, Container, ButtonDropdown } from '@cloudscape-design/components';
 import { FetchPost } from "../../resources/data-provider";
 import DefaultThumbnail from '../../static/default_thumbnail.png';
 import { getCurrentUser } from 'aws-amplify/auth';
@@ -42,7 +42,8 @@ class VideoSearch extends React.Component {
 
             textScoreExpanded: false,
             imageScoreExpanded: false,
-            showUploadModal: false
+            showUploadModal: false,
+            selectedEmbeddingOptions: ["audio-video", "video", "audio"] // Default
         };
 
         this.showMoreNumber = 8;
@@ -52,6 +53,13 @@ class VideoSearch extends React.Component {
                 { text: "Semantic search", id: "text_embedding" },
                 { text: "Multimodal search", id: "mm_embedding"},
             ];
+        
+        // Embedding options for Nova MME
+        this.embeddingOptions = [
+            { label: "Audio-Video", value: "audio-video", id: "audio-video" },
+            { label: "Video", value: "video", id: "video" },
+            { label: "Audio", value: "audio", id: "audio" }
+        ];
     }
 
     handleVideoClick = (taskId, autoPlay) => {
@@ -128,6 +136,10 @@ class VideoSearch extends React.Component {
       }
     searchEmbedding() {
           const { username } = getCurrentUser().then((username)=>{
+            const embeddingOptions = this.state.selectedEmbeddingOptions.length > 0 
+                ? this.state.selectedEmbeddingOptions
+                : [];
+            
             FetchPost("/nova/embedding/search-task-vector", {
                 "SearchText": this.state.filterText,
                 "Source": "",
@@ -138,7 +150,8 @@ class VideoSearch extends React.Component {
                 "PageSize": this.state.pageSize,
                 "FromIndex": 0,
                 "InputType": this.state.inputBytes?"image":"text",
-                "InputFormat": this.state.uploadedFile && this.state.uploadedFile.length > 0?this.state.uploadedFile[0].type.split("/")[1]:""
+                "InputFormat": this.state.uploadedFile && this.state.uploadedFile.length > 0?this.state.uploadedFile[0].type.split("/")[1]:"",
+                "EmbeddingOptions": embeddingOptions
             }, "NovaService").then((data) => {
                     var resp = data.body;
                     if (data.statusCode !== 200) {
@@ -215,6 +228,30 @@ class VideoSearch extends React.Component {
         }
       };
 
+    toggleEmbeddingOption = (optionValue) => {
+        const isSelected = this.state.selectedEmbeddingOptions.includes(optionValue);
+        let newSelected;
+        
+        if (isSelected) {
+            newSelected = this.state.selectedEmbeddingOptions.filter(v => v !== optionValue);
+        } else {
+            newSelected = [...this.state.selectedEmbeddingOptions, optionValue];
+        }
+        
+        this.setState({ selectedEmbeddingOptions: newSelected });
+    }
+
+    getButtonDropdownItems = () => {
+        return this.embeddingOptions.map(option => {
+            const isChecked = this.state.selectedEmbeddingOptions.includes(option.value);
+            return {
+                id: option.value,
+                text: `${isChecked ? '✓ ' : ''}${option.label}`,
+                disabled: false
+            };
+        });
+    }
+
     handleSampleSelect = e => {
         this.setState({
             showSampleImages: false,
@@ -283,6 +320,20 @@ class VideoSearch extends React.Component {
                                 Image Search
                             </FileInput>
                         </div>
+                        <div className='searchoptions'>
+                            <ButtonDropdown
+                                items={this.getButtonDropdownItems()}
+                                onItemClick={({ detail }) => this.toggleEmbeddingOption(detail.id)}
+                                expandableGroups
+                            >
+                                <span>
+                                    Embedding Options
+                                    {this.state.selectedEmbeddingOptions.length > 0 && (
+                                        <> <Badge color="blue">{this.state.selectedEmbeddingOptions.length}</Badge></>
+                                    )}
+                                </span>
+                            </ButtonDropdown>
+                        </div>
                     </div>
                 
                 {this.state.status === "loading"?<Spinner/>:<div/>}
@@ -350,9 +401,6 @@ class VideoSearch extends React.Component {
                 </Modal>                    
                 {this.state.items?this.state.items.map((l,i)=>{
                     return  <div className="thumb" key={l.TaskId}>
-                                <div className='badge'>
-                                <Badge color="blue">Multi-modal embedding</Badge>
-                                </div>
                                 {l.ThumbnailUrl === undefined || l.ThumbnailUrl === null? 
                                     <img key={crypto.randomUUID()} className='img' src={DefaultThumbnail} alt="Generating thumbnail" onClick={({ detail }) => {this.handleVideoClick(l.TaskId, false);}}></img>
                                     :<img key={crypto.randomUUID()} className='img' src={l.ThumbnailUrl} alt={l.FileName} onClick={({ detail }) => {this.handleVideoClick(l.TaskId, false);}}></img>

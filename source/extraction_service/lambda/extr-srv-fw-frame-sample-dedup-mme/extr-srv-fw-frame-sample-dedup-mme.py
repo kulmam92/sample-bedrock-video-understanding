@@ -10,6 +10,7 @@ DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
 VIDEO_FRAME_SIMILAIRTY_THRESHOLD = float(os.environ.get("VIDEO_FRAME_SIMILAIRTY_THRESHOLD","0.1"))
 VIDEO_SAMPLE_S3_PREFIX = os.environ.get("VIDEO_SAMPLE_S3_PREFIX")
 BEDROCK_MME_MODEL_ID = os.environ.get("BEDROCK_MME_MODEL_ID")
+DYNAMO_VIDEO_USAGE_TABLE = os.environ.get("DYNAMO_VIDEO_USAGE_TABLE")
 
 s3 = boto3.client('s3')
 bedrock = boto3.client('bedrock-runtime') 
@@ -69,6 +70,10 @@ def lambda_handler(event, context):
             if base64_encoded_image:
                 # Generate mm embedding
                 cur_vector = get_mm_vector(base64_encoded_image)
+
+                if cur_vector:
+                    # Store usage
+                    update_usage_to_db(task_id, cur_ts, BEDROCK_MME_MODEL_ID, 1)
                 
                 # similarity score: compare with previous image
                 #score = similarity_check(task_id, prev_ts, prev_vector, cur_ts, cur_vector)
@@ -174,6 +179,7 @@ def get_mm_vector(base64_encoded_image):
         response_body = json.loads(response.get("body").read())
         #print(response_body)
         embedding = response_body.get("embeddings",[{}])[0].get("embedding")
+
     except Exception as ex:
         print(ex)
 
@@ -194,3 +200,16 @@ def generate_sample_timestamps(setting, duration, sample_start_s, sample_end_s):
             current_time += float(setting["SampleIntervalS"])
 
     return timestamps
+
+def update_usage_to_db(task_id, index, model_id, number_of_image):
+    usage = {
+        "id": f"{task_id}_{index}_dedup",
+        "index": index,
+        "type": "nova_mme_image",
+        "name": "frame_dedup",
+        "task_id": task_id,
+        "model_id": model_id,
+        "number_of_image": number_of_image
+    }
+    utils.dynamodb_table_upsert(DYNAMO_VIDEO_USAGE_TABLE, usage)    
+    return usage

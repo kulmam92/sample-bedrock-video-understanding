@@ -7,6 +7,7 @@ import utils
 import time
 
 DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
+DYNAMO_VIDEO_USAGE_TABLE = os.environ.get("DYNAMO_VIDEO_USAGE_TABLE")
 
 VIDEO_SAMPLE_S3_BUCKET = os.environ.get("VIDEO_SAMPLE_S3_BUCKET")
 VIDEO_SAMPLE_S3_PREFIX = os.environ.get("VIDEO_SAMPLE_S3_PREFIX")
@@ -68,6 +69,7 @@ def get_video_metadata(event, file_path):
     thumbnail_local_path = f'{local_path}thumbnail.jpeg'
     thumbnail_s3_bucket = event["Request"]["Video"]["S3Object"]["Bucket"]
     thumbnail_s3_key = f'{event["Request"]["Video"]["S3Object"]["Key"].replace(video_file_name, "thumbnail.jpeg")}'
+    task_id = event["Request"].get("TaskId")
 
     video_clip = VideoFileClip(file_path)    
     # Get thumbnail - avoid black screen
@@ -78,7 +80,7 @@ def get_video_metadata(event, file_path):
         s3.upload_file(thumbnail_local_path, thumbnail_s3_bucket, thumbnail_s3_key)
         
         # Check if image is black frame
-        is_black_frame = is_single_color_frame(thumbnail_s3_bucket, thumbnail_s3_key)
+        is_black_frame = is_single_color_frame(task_id, i, thumbnail_s3_bucket, thumbnail_s3_key)
         if is_black_frame is not None and is_black_frame == True:
             break
     
@@ -174,7 +176,7 @@ def parse_converse_response(response):
         return response["content"]
     return response
 
-def is_single_color_frame(thumbnail_s3_bucket, thumbnail_s3_key):
+def is_single_color_frame(task_id, index, thumbnail_s3_bucket, thumbnail_s3_key):
     config ={
               "name": "Thumbnail verfication",
               "modelId": MODEL_ID_IMAGE_UNDERSTANDING,
@@ -213,7 +215,31 @@ def is_single_color_frame(thumbnail_s3_bucket, thumbnail_s3_key):
         response = bedrock_converse(config=config, image_s3_bucket=thumbnail_s3_bucket, image_s3_key=thumbnail_s3_key)
         output = parse_converse_response(response)
 
+        # Parse usage
+        if "usage" in response:
+            input_tokens = response["usage"]["inputTokens"]
+            output_tokens = response["usage"]["outputTokens"]
+            total_tokens = response["usage"]["totalTokens"]
+
+            # store to the usage table
+            update_usage_to_db(task_id, index, "thumbnail", MODEL_ID_IMAGE_UNDERSTANDING, input_tokens, output_tokens, total_tokens)
+
         return output is None or output.get("result") == True
     except Exception as ex:
         print(ex)
         return True
+
+def update_usage_to_db(task_id, index, name, model_id, input_tokens, output_tokens, total_tokens):
+    usage = {
+        "id": f"{task_id}_{index}_{name}_thumbnail",
+        "index": index,
+        "type": "image_understanding",
+        "name": name,
+        "task_id": task_id,
+        "model_id": model_id,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": total_tokens
+    }
+    utils.dynamodb_table_upsert(DYNAMO_VIDEO_USAGE_TABLE, usage)    
+    return usage

@@ -166,10 +166,6 @@ class FrontendStack(NestedStack):
                 }
             }),
         )
-
-        # Grant permissions
-        source_asset.bucket.grant_read(project.role)
-        staging_bucket.grant_write(project.role)
         
         # Add CloudWatch Logs permissions for CodeBuild
         project.role.add_to_policy(_iam.PolicyStatement(
@@ -184,6 +180,10 @@ class FrontendStack(NestedStack):
                 f"arn:aws:logs:{self.region}:{self.account_id}:log-group:/aws/codebuild/{project.project_name}:*"
             ]
         ))
+        
+        # Grant permissions
+        source_asset.bucket.grant_read(project.role)
+        staging_bucket.grant_write(project.role)
 
         # Invoke codebuild project using a custom resource
         build_trigger = cr.AwsCustomResource(
@@ -201,34 +201,97 @@ class FrontendStack(NestedStack):
             ),
         )
 
-        # Add 5-minute delay after CodeBuild deployment
-        delay_provider = cr.Provider(
+        # Monitor CodeBuild status and wait for completion
+        build_monitor_function = _lambda.Function(
             self,
-            "DelayProvider",
-            on_event_handler=_lambda.Function(
-                self,
-                "DelayFunction",
-                runtime=_lambda.Runtime.PYTHON_3_9,
-                handler="index.on_event",
-                code=_lambda.Code.from_inline("""
+            "BuildMonitorFunction",
+            runtime=_lambda.Runtime.PYTHON_3_9,
+            handler="index.on_event",
+            code=_lambda.Code.from_inline(f"""
+import boto3
 import time
+
+codebuild = boto3.client('codebuild')
+PROJECT_NAME = '{project.project_name}'
 
 def on_event(event, context):
     if event['RequestType'] == 'Create':
-        time.sleep(300)  # 5 minutes delay
-    return {'PhysicalResourceId': 'DelayResource'}
+        # Poll CodeBuild status
+        max_wait_time = 600  # 10 minutes max
+        poll_interval = 10   # Check every 10 seconds
+        elapsed_time = 0
+        
+        while elapsed_time < max_wait_time:
+            try:
+                # Get the latest build for this project
+                response = codebuild.list_builds_for_project(
+                    projectName=PROJECT_NAME,
+                    sortOrder='DESCENDING'
+                )
+                
+                if response['ids']:
+                    build_id = response['ids'][0]
+                    build_info = codebuild.batch_get_builds(ids=[build_id])
+                    
+                    if build_info['builds']:
+                        build_status = build_info['builds'][0]['buildStatus']
+                        
+                        if build_status == 'SUCCEEDED':
+                            print(f"Build {{build_id}} succeeded!")
+                            return {{'PhysicalResourceId': 'BuildMonitorResource'}}
+                        elif build_status == 'FAILED':
+                            print(f"Build {{build_id}} failed. Restarting...")
+                            # Restart the build
+                            codebuild.start_build(projectName=PROJECT_NAME)
+                            elapsed_time = 0  # Reset timer for new build
+                        elif build_status in ['IN_PROGRESS', 'PENDING']:
+                            print(f"Build {{build_id}} status: {{build_status}}. Waiting...")
+                            time.sleep(poll_interval)
+                            elapsed_time += poll_interval
+                        else:
+                            print(f"Build {{build_id}} status: {{build_status}}. Stopping.")
+                            break
+                else:
+                    print("No builds found yet. Waiting...")
+                    time.sleep(poll_interval)
+                    elapsed_time += poll_interval
+                    
+            except Exception as e:
+                print(f"Error checking build status: {{str(e)}}")
+                time.sleep(poll_interval)
+                elapsed_time += poll_interval
+        
+        print("Max wait time reached or build completed")
+    
+    return {{'PhysicalResourceId': 'BuildMonitorResource'}}
 """),
-                timeout=Duration.minutes(10)
-            )
+            timeout=Duration.minutes(15),
+            initial_policy=[
+                _iam.PolicyStatement(
+                    effect=_iam.Effect.ALLOW,
+                    actions=[
+                        "codebuild:ListBuildsForProject",
+                        "codebuild:BatchGetBuilds",
+                        "codebuild:StartBuild"
+                    ],
+                    resources=[project.project_arn]
+                )
+            ]
         )
         
-        delay_resource = _cfn.CfnCustomResource(
+        build_monitor_provider = cr.Provider(
             self,
-            "DelayAfterBuild",
-            service_token=delay_provider.service_token
+            "BuildMonitorProvider",
+            on_event_handler=build_monitor_function
         )
         
-        delay_resource.node.add_dependency(build_trigger)
+        build_monitor_resource = _cfn.CfnCustomResource(
+            self,
+            "BuildMonitor",
+            service_token=build_monitor_provider.service_token
+        )
+        
+        build_monitor_resource.node.add_dependency(build_trigger)
 
 
     def deploy_cloudfront(self):

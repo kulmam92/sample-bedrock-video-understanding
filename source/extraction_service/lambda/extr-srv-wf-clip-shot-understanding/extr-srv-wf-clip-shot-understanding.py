@@ -3,9 +3,11 @@ import boto3
 import os
 import utils
 import time 
+import uuid
 
 DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
 DYNAMO_VIDEO_SHOT_TABLE = os.environ.get("DYNAMO_VIDEO_SHOT_TABLE")
+DYNAMO_VIDEO_USAGE_TABLE = os.environ.get("DYNAMO_VIDEO_USAGE_TABLE")
 S3_BUCKET_DATA = os.environ.get("S3_BUCKET_DATA")
 
 s3 = boto3.client('s3')
@@ -54,6 +56,7 @@ def lambda_handler(event, context):
         outputs = []
         for config in configs:
             response = bedrock_converse(config=config, s3_bucket=s3_bucket, s3_key=s3_key)
+            # Parse output
             output = parse_converse_response(response)
             if not output:
                 output = response
@@ -64,6 +67,17 @@ def lambda_handler(event, context):
                 "name": config["name"],
                 "value": output
             })
+
+            # Parse usage
+            if "usage" in response:
+                input_tokens = response["usage"]["inputTokens"]
+                output_tokens = response["usage"]["outputTokens"]
+                total_tokens = response["usage"]["totalTokens"]
+
+                # store to the usage table
+                update_usage_to_db(task_id, index, config["name"], config["modelId"], input_tokens, output_tokens, total_tokens)
+
+
         if outputs:
             # Store resutl to DB
             shot = update_shot_to_db(task_id, index, config["modelId"], outputs)
@@ -85,6 +99,20 @@ def update_shot_to_db(task_id, index, model_id, outputs):
         utils.dynamodb_table_upsert(DYNAMO_VIDEO_SHOT_TABLE, shot)    
     return shot
 
+def update_usage_to_db(task_id, index, name, model_id, input_tokens, output_tokens, total_tokens):
+    usage = {
+        "id": f"{task_id}_{index}_{name}_shot",
+        "index": index,
+        "type": "video_understanding",
+        "name": name,
+        "task_id": task_id,
+        "model_id": model_id,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": total_tokens
+    }
+    utils.dynamodb_table_upsert(DYNAMO_VIDEO_USAGE_TABLE, usage)    
+    return usage
 
 def bedrock_converse(config, max_retries=3, retry_delay=1, s3_bucket=None, s3_key=None):
     inference_config = config.get("inferConfig")
@@ -154,7 +182,7 @@ def bedrock_converse(config, max_retries=3, retry_delay=1, s3_bucket=None, s3_ke
             #print(parse_converse_response(response))
             if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
                 raise Exception(f"API request failed: {response['ResponseMetadata']['HTTPStatusCode']}")
-
+            
             return response
         except Exception as ex:
             print(ex)

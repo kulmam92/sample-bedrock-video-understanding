@@ -150,6 +150,28 @@ class ExtrServiceStack(NestedStack):
             ),
             projection_type=_dynamodb.ProjectionType.ALL 
         )
+        
+        # Video usage table
+        video_usage_table = _dynamodb.Table(self, 
+            id='video-usage-table', 
+            table_name=DYNAMO_VIDEO_USAGE_TABLE, 
+            partition_key=_dynamodb.Attribute(name='id', type=_dynamodb.AttributeType.STRING),
+            sort_key=_dynamodb.Attribute(name='task_id', type=_dynamodb.AttributeType.STRING),
+            point_in_time_recovery=True,
+            removal_policy=RemovalPolicy.DESTROY
+        )
+        video_usage_table.add_global_secondary_index(
+            index_name="task_id-type-index",
+            partition_key=_dynamodb.Attribute(
+                name="task_id",
+                type=_dynamodb.AttributeType.STRING
+            ),
+            sort_key=_dynamodb.Attribute(
+                name="type",
+                type=_dynamodb.AttributeType.STRING
+            ),
+            projection_type=_dynamodb.ProjectionType.ALL 
+        )
 
     def deploy_cognito(self):
         user_pool = _cognito.UserPool.from_user_pool_id(
@@ -207,6 +229,7 @@ class ExtrServiceStack(NestedStack):
                 'VIDEO_SAMPLE_CHUNK_DURATION_S': VIDEO_SAMPLE_CHUNK_DURATION_S,
                 'VIDEO_SAMPLE_S3_PREFIX': VIDEO_SAMPLE_S3_PREFIX,
                 'VIDEO_SAMPLE_S3_BUCKET': self.s3_bucket_name_extraction,
+                'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE
             }, 
             timeout_s=15*60, memory_size=10240, ephemeral_storage_size=10240,
             layers=[self.moviepy_layer]
@@ -241,7 +264,8 @@ class ExtrServiceStack(NestedStack):
                 'DYNAMO_VIDEO_TASK_TABLE': DYNAMO_VIDEO_TASK_TABLE,
                 'VIDEO_FRAME_SIMILAIRTY_THRESHOLD': VIDEO_FRAME_SIMILAIRTY_THRESHOLD_DEFAULT_MME,
                 'VIDEO_SAMPLE_S3_PREFIX': VIDEO_SAMPLE_S3_PREFIX,
-                'BEDROCK_MME_MODEL_ID': MODEL_ID_BEDROCK_MME
+                'BEDROCK_MME_MODEL_ID': MODEL_ID_BEDROCK_MME,
+                'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE
             }, 
             timeout_s=300, memory_size=10240, ephemeral_storage_size=1024,
             layers=[self.aws_layer],
@@ -273,6 +297,7 @@ class ExtrServiceStack(NestedStack):
                 'DYNAMO_VIDEO_FRAME_TABLE': DYNAMO_VIDEO_FRAME_TABLE,
                 'DYNAMO_VIDEO_TASK_TABLE': DYNAMO_VIDEO_TASK_TABLE,
                 'DYNAMO_VIDEO_TRANS_TABLE': DYNAMO_VIDEO_TRANS_TABLE,
+                'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE
             }, 
             timeout_s=300, memory_size=1024, ephemeral_storage_size=1024,
             layers=[self.opencv_layer],
@@ -302,6 +327,7 @@ class ExtrServiceStack(NestedStack):
             {             
                 'DYNAMO_VIDEO_TASK_TABLE': DYNAMO_VIDEO_TASK_TABLE,
                 'DYNAMO_VIDEO_TRANS_TABLE': DYNAMO_VIDEO_TRANS_TABLE,
+                'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE
             }, 
             timeout_s=60*15, memory_size=10240, ephemeral_storage_size=10240,
         )
@@ -330,6 +356,7 @@ class ExtrServiceStack(NestedStack):
                 'VIDEO_SAMPLE_CHUNK_DURATION_S': VIDEO_SAMPLE_CHUNK_DURATION_S,
                 'VIDEO_SAMPLE_S3_PREFIX': VIDEO_SAMPLE_S3_PREFIX,
                 'VIDEO_SAMPLE_S3_BUCKET': self.s3_bucket_name_extraction,
+                'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE,
             }, 
             timeout_s=15*60, memory_size=10240, ephemeral_storage_size=10240,
             layers=[self.moviepy_layer]
@@ -371,7 +398,8 @@ class ExtrServiceStack(NestedStack):
             {
                 'DYNAMO_VIDEO_TASK_TABLE': DYNAMO_VIDEO_TASK_TABLE,
                 'DYNAMO_VIDEO_SHOT_TABLE': DYNAMO_VIDEO_SHOT_TABLE,
-                'S3_BUCKET_DATA': self.s3_bucket_name_extraction
+                'S3_BUCKET_DATA': self.s3_bucket_name_extraction,
+                'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE,
             }, 
             timeout_s=300, memory_size=4096, ephemeral_storage_size=4096,
             layers=[self.moviepy_layer],
@@ -390,6 +418,7 @@ class ExtrServiceStack(NestedStack):
                 'EMBEDDING_DIM': EMBEDDING_DIM_DEFAULT,
                 'DYNAMO_VIDEO_TASK_TABLE': DYNAMO_VIDEO_TASK_TABLE,
                 'S3_BUCKET_DATA': self.s3_bucket_name_extraction,
+                'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE
             }, 
             timeout_s=30, memory_size=10240, ephemeral_storage_size=4096,
             layers=[self.moviepy_layer],
@@ -596,6 +625,7 @@ class ExtrServiceStack(NestedStack):
                 'S3_BUCKET_DATA': self.s3_bucket_name_extraction,
                 'S3_VECTOR_BUCKET': S3_VECTOR_BUCKET_NAME,
                 'S3_VECTOR_INDEX': S3_VECTOR_INDEX_NAME,
+                'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE
             }, 
             timeout_s=120, memory_size=10240, ephemeral_storage_size=4096,
             layers=[self.moviepy_layer],
@@ -738,6 +768,17 @@ class ExtrServiceStack(NestedStack):
                 },
             )
 
+        # POST /v1/extraction/video/get-token-and-cost
+        lambda_key = "extr-srv-api-get-token-and-cost"
+        self.create_api_endpoint(id=f'{lambda_key}-ep', root=ex_video, path1="get-token-and-cost", method="POST", auth=self.cognito_authorizer, 
+                role=self.create_role(lambda_key, ["dynamodb"]), 
+                lambda_file_name=lambda_key,
+                memory_m=512, timeout_s=30, ephemeral_storage_size=512,
+                evns={
+                    'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE,
+                },
+            )
+
         # API Gateway - end
 
     def create_role(self, function_name, policies):
@@ -770,10 +811,12 @@ class ExtrServiceStack(NestedStack):
                             f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_FRAME_TABLE}/index/*",
                             f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_SHOT_TABLE}/index/*",
                             f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_TRANS_TABLE}/index/*",
+                            f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_USAGE_TABLE}/index/*",
                             f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_TASK_TABLE}",
                             f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_TRANS_TABLE}",
                             f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_FRAME_TABLE}",
-                            f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_SHOT_TABLE}"
+                            f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_SHOT_TABLE}",
+                            f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_USAGE_TABLE}",
                         ]
                     ))
         if "bedrock" in policies:

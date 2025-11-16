@@ -5,7 +5,8 @@ import utils
 
 DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
 TLABS_S3_VECTOR_BUCKET = os.environ.get("TLABS_S3_VECTOR_BUCKET")
-TLABS_S3_VECTOR_INDEX = os.environ.get("TLABS_S3_VECTOR_INDEX")
+TLABS_S3_VECTOR_INDEX_27 = os.environ.get("TLABS_S3_VECTOR_INDEX_27")
+TLABS_S3_VECTOR_INDEX_30 = os.environ.get("TLABS_S3_VECTOR_INDEX_30")
 
 TLABS_OUTPUT_KEY_PREFIX_TEMPLATE = "tasks/{task_id}/tlabs/"
 S3_KEY_PREFIX_TEMPLATE = "tasks/{task_id}/"
@@ -30,6 +31,9 @@ def lambda_handler(event, context):
         print(f'Task does not exist in {DYNAMO_VIDEO_TASK_TABLE}: {task_id}')
 
     s3_bucket = task["Request"]["Video"]["S3Object"]["Bucket"]
+
+    task_type = task.get("Request",{}).get("TaskType")
+    TLABS_S3_VECTOR_INDEX = TLABS_S3_VECTOR_INDEX_27 if task_type == "marengo27" else TLABS_S3_VECTOR_INDEX_30
 
     # Delete S3 vectors
     delete_s3_vectors(s3_bucket, 

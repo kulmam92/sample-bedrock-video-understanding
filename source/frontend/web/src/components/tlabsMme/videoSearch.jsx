@@ -1,6 +1,6 @@
 import React, {createRef} from 'react';
 import './videoSearch.css'
-import { Button, Link, FileInput, Alert, Spinner, Icon, Modal, Box, SpaceBetween, Badge, ExpandableSection, Tabs, Container } from '@cloudscape-design/components';
+import { Button, Link, FileInput, Alert, Spinner, Icon, Modal, Box, SpaceBetween, Badge, SegmentedControl, Tabs, Container, ButtonDropdown, Checkbox } from '@cloudscape-design/components';
 import { FetchPost } from "../../resources/data-provider";
 import DefaultThumbnail from '../../static/default_thumbnail.png';
 import { getCurrentUser } from 'aws-amplify/auth';
@@ -40,9 +40,12 @@ class VideoSearch extends React.Component {
             showSampleImages: false,
             showSearchVideoModal: false,
 
+            selectedModelId: "marengo30", // marengo27
+
             textScoreExpanded: false,
             imageScoreExpanded: false,
-            showUploadModal: false
+            showUploadModal: false,
+            selectedEmbeddingOptions: ["visual"] // Default for marengo30
         };
 
         this.showMoreNumber = 8;
@@ -52,6 +55,19 @@ class VideoSearch extends React.Component {
                 { text: "Semantic search", id: "text_embedding" },
                 { text: "Multimodal search", id: "mm_embedding"},
             ];
+        
+        // Embedding options for different models
+        this.embeddingOptionsMarengo30 = [
+            { label: "Visual", value: "visual", id: "visual" },
+            { label: "Audio", value: "audio", id: "audio" },
+            { label: "Transcription", value: "transcription", id: "transcription" }
+        ];
+        
+        this.embeddingOptionsMarengo27 = [
+            { label: "Visual-Text", value: "visual-text", id: "visual-text" },
+            { label: "Visual-Image", value: "visual-image", id: "visual-image" },
+            { label: "Audio", value: "audio", id: "audio" }
+        ];
     }
 
     handleVideoClick = (taskId, autoPlay) => {
@@ -99,7 +115,7 @@ class VideoSearch extends React.Component {
                 "RequestBy": username.username,
                 "PageSize": this.state.pageSize,
                 "FromIndex": 0,
-                "TaskType": "tlabsmmembed"
+                "TaskType": this.state.selectedModelId
             }, "TLabsService").then((data) => {
                     var resp = data.body;
                     if (data.statusCode !== 200) {
@@ -128,6 +144,10 @@ class VideoSearch extends React.Component {
       }
     searchEmbedding() {
           const { username } = getCurrentUser().then((username)=>{
+            const embeddingOptions = this.state.selectedEmbeddingOptions.length > 0 
+                ? this.state.selectedEmbeddingOptions
+                : [];
+            
             FetchPost("/tlabs/embedding/search-task-vector", {
                 "SearchText": this.state.filterText,
                 "Source": "",
@@ -136,7 +156,8 @@ class VideoSearch extends React.Component {
                 "RequestBy": username.username,
                 "PageSize": this.state.pageSize,
                 "FromIndex": 0,
-                "TaskType": "tlabsmmembed"
+                "TaskType": this.state.selectedModelId,
+                "EmbeddingOptions": embeddingOptions
             }, "TLabsService").then((data) => {
                     var resp = data.body;
                     if (data.statusCode !== 200) {
@@ -226,6 +247,37 @@ class VideoSearch extends React.Component {
         this.populateItems();
     }
 
+    getEmbeddingOptionsForModel = () => {
+        return this.state.selectedModelId === "marengo30" 
+            ? this.embeddingOptionsMarengo30 
+            : this.embeddingOptionsMarengo27;
+    }
+
+    toggleEmbeddingOption = (optionValue) => {
+        const isSelected = this.state.selectedEmbeddingOptions.includes(optionValue);
+        let newSelected;
+        
+        if (isSelected) {
+            newSelected = this.state.selectedEmbeddingOptions.filter(v => v !== optionValue);
+        } else {
+            newSelected = [...this.state.selectedEmbeddingOptions, optionValue];
+        }
+        
+        this.setState({ selectedEmbeddingOptions: newSelected });
+    }
+
+    getButtonDropdownItems = () => {
+        const options = this.getEmbeddingOptionsForModel();
+        return options.map(option => {
+            const isChecked = this.state.selectedEmbeddingOptions.includes(option.value);
+            return {
+                id: option.value,
+                text: `${isChecked ? '✓ ' : ''}${option.label}`,
+                disabled: false
+            };
+        });
+    }
+
     render() {
         return (
             <div className="tlabsvideosearch">
@@ -233,8 +285,26 @@ class VideoSearch extends React.Component {
                 <Alert statusIconAriaLabel="Warning" type="warning">
                 {this.state.alert}
                 </Alert>:<div/>}
-                    <div className='title'>TwelveLabs - Marengo Embed 2.7
+                    <div className='title'>TwelveLabs - Video Embedding
                         &nbsp;&nbsp;&nbsp;<Link onClick={()=>{this.setState({showDocModal: true})}}><Icon name="support"></Icon></Link>
+                    </div>
+                    <div className='model'>
+                    <Tabs
+                        selectedId={this.state.selectedModelId}
+                        onChange={({ detail }) => {
+                            const newModelId = detail.activeTabId;
+                            // Set default embedding option based on model
+                            const defaultOption = newModelId === "marengo30" ? ["visual"] : ["visual-image"];
+                            this.setState({
+                                selectedModelId: newModelId,
+                                selectedEmbeddingOptions: defaultOption
+                            }, () => this.searchAll());
+                        }}
+                        tabs={[
+                            { label: "Marengo 3.0", id: "marengo30" },
+                            { label: "Marengo 2.7", id: "marengo27" },
+                        ]}
+                    />
                     </div>
                     <div className='globalaction'>
                         {this.props.readonlyMode !== true?
@@ -281,6 +351,20 @@ class VideoSearch extends React.Component {
                                 Image Search
                             </FileInput>
                         </div>
+                        <div className='searchoptions'>
+                            <ButtonDropdown
+                                items={this.getButtonDropdownItems()}
+                                onItemClick={({ detail }) => this.toggleEmbeddingOption(detail.id)}
+                                expandableGroups
+                            >
+                                <span>
+                                    Embedding Options
+                                    {this.state.selectedEmbeddingOptions.length > 0 && (
+                                        <> <Badge color="blue">{this.state.selectedEmbeddingOptions.length}</Badge></>
+                                    )}
+                                </span>
+                            </ButtonDropdown>
+                        </div>
                     </div>
                 
                 {this.state.status === "loading"?<Spinner/>:<div/>}
@@ -324,9 +408,6 @@ class VideoSearch extends React.Component {
                     
                 {this.state.items?this.state.items.map((l,i)=>{
                     return  <div className="thumb" key={l.TaskId}>
-                                <div className='badge'>
-                                <Badge color="blue">Multi-modal embedding</Badge>
-                                </div>
                                 {l.ThumbnailUrl === undefined || l.ThumbnailUrl === null? 
                                     <img key={crypto.randomUUID()} className='img' src={DefaultThumbnail} alt="Generating thumbnail" onClick={({ detail }) => {this.handleVideoClick(l.TaskId, false);}}></img>
                                     :<img key={crypto.randomUUID()} className='img' src={l.ThumbnailUrl} alt={l.FileName} onClick={({ detail }) => {this.handleVideoClick(l.TaskId, false);}}></img>
@@ -406,7 +487,7 @@ class VideoSearch extends React.Component {
                     visible={this.state.showUploadModal}
                     size='max'
                 >
-                    <VideoUpload onSubmit={this.handleVideoUpload} onCancel={()=>this.setState({showUploadModal: false})} taskType={this.state.videoActiveTabId} />
+                    <VideoUpload onSubmit={this.handleVideoUpload} onCancel={()=>this.setState({showUploadModal: false})} taskType={this.state.videoActiveTabId} selectedModelId={this.state.selectedModelId} />
                 </Modal>
             </div>
         );

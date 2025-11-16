@@ -6,6 +6,12 @@
     font-weight: bold;
     padding: 0px 0px 0px 10px;
 }
+.tlabsvideosearch .model {
+    width: 50%;
+    display: block;
+    margin-bottom: -70px;
+    margin-top: 10px;
+}
 .tlabsvideosearch .noresult {
     padding: 20px;
     font-size: large;
@@ -123,7 +129,14 @@
 }
 .tlabsvideosearch .searchinput .upload {
     margin: 20px 0px 10px 20px;
-    width: 300px;
+    display: inline-block;
+}
+
+.tlabsvideosearch .searchinput .searchoptions {
+    margin: 20px 0px 10px 20px;
+    display: inline-block;
+    vertical-align: top;
+    display: inline-block;
 }
 
 .tlabsvideosearch .searchinput .input {

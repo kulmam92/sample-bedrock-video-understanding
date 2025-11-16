@@ -284,17 +284,22 @@ class ServicePreStack(NestedStack):
                                 {
                                     "BucketName": S3_VECTOR_BUCKET_NAME,
                                     "IndexName": S3_VECTOR_INDEX_NAME,
-                                    "IndexDim": EMBEDDING_DIM_DEFAULT
+                                    "IndexDim": EMBEDDING_DIM_DEFAULT_NOVA_MME
                                 },
                                 {
                                     "BucketName": S3_VECTOR_BUCKET_NAME,
                                     "IndexName": S3_VECTOR_INDEX_NOVA_MME_FIXED,
-                                    "IndexDim": EMBEDDING_DIM_DEFAULT
+                                    "IndexDim": EMBEDDING_DIM_DEFAULT_NOVA_MME
                                 },
                                 {
                                     "BucketName": S3_VECTOR_BUCKET_NAME,
-                                    "IndexName": S3_VECTOR_INDEX_TLABS,
-                                    "IndexDim": EMBEDDING_DIM_DEFAULT
+                                    "IndexName": S3_VECTOR_INDEX_TLABS_27,
+                                    "IndexDim": EMBEDDING_DIM_DEFAULT_27
+                                },
+                                {
+                                    "BucketName": S3_VECTOR_BUCKET_NAME,
+                                    "IndexName": S3_VECTOR_INDEX_TLABS_30,
+                                    "IndexDim": EMBEDDING_DIM_DEFAULT_30
                                 }
                             ]
                         }

@@ -124,7 +124,9 @@ class TlabsServiceStack(NestedStack):
             {
                 'DYNAMO_VIDEO_TASK_TABLE': DYNAMO_VIDEO_TASK_TABLE,
                 'TLABS_S3_VECTOR_BUCKET': S3_VECTOR_BUCKET_TLABS,
-                'TLABS_S3_VECTOR_INDEX': S3_VECTOR_INDEX_TLABS,
+                'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE,
+                'TLABS_S3_VECTOR_INDEX': TLABS_S3_VECTOR_INDEX_27,
+                'TLABS_S3_VECTOR_INDEX_30': TLABS_S3_VECTOR_INDEX_30,
             }, 
             timeout_s=180, memory_size=10240, ephemeral_storage_size=1024,
             layers=[self.boto3_layer],
@@ -222,7 +224,8 @@ class TlabsServiceStack(NestedStack):
             evns={
                 'DYNAMO_VIDEO_TASK_TABLE': DYNAMO_VIDEO_TASK_TABLE,
                 'TLABS_S3_VECTOR_BUCKET': S3_VECTOR_BUCKET_TLABS,
-                'TLABS_S3_VECTOR_INDEX': S3_VECTOR_INDEX_TLABS,
+                'TLABS_S3_VECTOR_INDEX_27': TLABS_S3_VECTOR_INDEX_27,
+                'TLABS_S3_VECTOR_INDEX_30': TLABS_S3_VECTOR_INDEX_30
             },
             layers=[self.boto3_layer]
         )   
@@ -251,8 +254,12 @@ class TlabsServiceStack(NestedStack):
                 'DYNAMO_VIDEO_TASK_TABLE': DYNAMO_VIDEO_TASK_TABLE,
                 'S3_PRE_SIGNED_URL_EXPIRY_S': S3_PRE_SIGNED_URL_EXPIRY_S,
                 'TLABS_S3_VECTOR_BUCKET': S3_VECTOR_BUCKET_TLABS,
-                'TLABS_S3_VECTOR_INDEX':S3_VECTOR_INDEX_TLABS,
-                'S3_BUCKET_DATA': self.s3_bucket_name_mm
+                'S3_BUCKET_DATA': self.s3_bucket_name_mm,
+                'MODEL_ID_TLAB_27': MODEL_ID_TLAB_27,
+                'MODEL_ID_TLAB_30': MODEL_ID_TLAB_30,
+                'TLABS_S3_VECTOR_INDEX_27': TLABS_S3_VECTOR_INDEX_27,
+                'TLABS_S3_VECTOR_INDEX_30': TLABS_S3_VECTOR_INDEX_30
+
             },
             layers=[self.boto3_layer]
             )   
@@ -394,6 +401,8 @@ class TlabsServiceStack(NestedStack):
                         resources=[
                             f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_TASK_TABLE}/index/*",
                             f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_TASK_TABLE}",
+                            f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_USAGE_TABLE}/index/*",
+                            f"arn:aws:dynamodb:{self.region}:{self.account_id}:table/{DYNAMO_VIDEO_USAGE_TABLE}",
                         ]
                     ))
         if "bedrock" in policies:

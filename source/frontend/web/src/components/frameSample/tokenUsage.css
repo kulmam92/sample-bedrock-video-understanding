@@ -1,0 +1,52 @@
+.usage-card {
+    padding: 0.5rem 0;
+}
+
+.usage-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #0972d3;
+    margin-top: 0.25rem;
+}
+
+.usage-value.cost-value {
+    color: #037f0c;
+    font-size: 1.75rem;
+}
+
+.model-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ebed;
+}
+
+.model-cost {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #037f0c;
+}
+
+.group-name-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e9ebed;
+    margin-bottom: 0.5rem;
+}
+
+.group-cost {
+    margin-left: auto;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #037f0c;
+}
+
+.token-usage-container {
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+    padding: 1rem 0;
+}

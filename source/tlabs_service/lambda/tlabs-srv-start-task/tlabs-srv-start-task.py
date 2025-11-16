@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 
 DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
 LAMBDA_FUN_NAME_VIDEO_METADATA = os.environ.get("LAMBDA_FUN_NAME_VIDEO_METADATA")
-TWELVELABS_MODEL_ID = 'twelvelabs.marengo-embed-2-7-v1:0'
 
 bedrock = boto3.client('bedrock-runtime')
 lambda_client = boto3.client('lambda')
@@ -24,7 +23,8 @@ def lambda_handler(event, context):
     
     # Get task Id. Create a new one if not provided.
     task_id = event.get("TaskId")
-    if not task_id:
+    model_id = event.get("ModelId")
+    if not task_id or not model_id:
         return {
             'statusCode': 400,
             'body': 'Invalid request'
@@ -44,13 +44,11 @@ def lambda_handler(event, context):
         }
     }
 
-    # TwelveLabs for now
     s3_bucket = event.get("Video",{}).get("S3Object").get("Bucket")
     s3_key = event.get("Video",{}).get("S3Object").get("Key")
     s3_prefix_output = f'tasks/{task_id}/tlabs/'
-    model_id = event.get("ModelId",TWELVELABS_MODEL_ID)
 
-    # Get account Id
+    # Get AWS account Id
     account_id = sts.get_caller_identity()["Account"]
 
     request = event.get("TLabsRequest")
@@ -67,12 +65,17 @@ def lambda_handler(event, context):
         request = {
             "inputType": "video",
         }
-    request["mediaSource"] = {
+    mediaSource = {
             "s3Location": {
                 "uri": f's3://{s3_bucket}/{s3_key}',
                 "bucketOwner": account_id
             }
         }
+    if "twelvelabs.marengo-embed-3-0-v1:0" in model_id:
+        request["video"]["mediaSource"] = mediaSource
+    else:
+        # Marengo 2.7
+        request["mediaSource"] = mediaSource
 
     # Start 12labs async task
     response = bedrock.start_async_invoke(
