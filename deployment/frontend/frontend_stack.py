@@ -99,9 +99,8 @@ class FrontendStack(NestedStack):
         source_asset = s3_assets.Asset(
             self,
             "FrontendReactSourceCode",
-            path="../source/frontend/web",   # <-- local React project folder
-            exclude=["build/*", "node_modules/*",".env"]
-
+            path="../source/frontend/web",
+            exclude=["build", "node_modules", ".env", "*.log", "**/.git", "**/node_modules/**"]
         )
 
         # Use data bucket as the staging bucket to store build

@@ -11,7 +11,8 @@ TRANSCRIBE_OUTPUT_PREFIX = os.environ.get('TRANSCRIBE_OUTPUT_PREFIX')
 
 DYNAMO_VIDEO_TASK_TABLE = os.environ.get("DYNAMO_VIDEO_TASK_TABLE")
 
-transcribe = boto3.client('transcribe', region_name="us-east-1")
+AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+transcribe = boto3.client('transcribe', region_name=AWS_REGION)
 
 def lambda_handler(event, context):
     if not event\

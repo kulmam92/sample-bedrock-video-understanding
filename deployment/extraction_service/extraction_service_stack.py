@@ -779,6 +779,22 @@ class ExtrServiceStack(NestedStack):
                 },
             )
 
+        # POST /v1/extraction/video/get-data-size
+        lambda_key = "extr-srv-api-get-data-size"
+        self.create_api_endpoint(id=f'{lambda_key}-ep', root=ex_video, path1="get-data-size", method="POST", auth=self.cognito_authorizer, 
+                role=self.create_role(lambda_key, ["s3", "dynamodb"]), 
+                lambda_file_name=lambda_key,
+                memory_m=512, timeout_s=60, ephemeral_storage_size=512,
+                evns={
+                    'S3_BUCKET': self.s3_bucket_name_extraction,
+                    'DYNAMO_VIDEO_TASK_TABLE': DYNAMO_VIDEO_TASK_TABLE,
+                    'DYNAMO_VIDEO_FRAME_TABLE': DYNAMO_VIDEO_FRAME_TABLE,
+                    'DYNAMO_VIDEO_SHOT_TABLE': DYNAMO_VIDEO_SHOT_TABLE,
+                    'DYNAMO_VIDEO_TRANS_TABLE': DYNAMO_VIDEO_TRANS_TABLE,
+                    'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE,
+                },
+            )
+
         # API Gateway - end
 
     def create_role(self, function_name, policies):

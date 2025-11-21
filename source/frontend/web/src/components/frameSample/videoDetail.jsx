@@ -7,6 +7,7 @@ import VideoTrans from './videoTrans'
 import VideoFrames from './videoFrames'
 import VideoShots from './videoShots'
 import TokenUsage from './tokenUsage'
+import DataSize from './dataSize'
 
 class VideoDetail extends React.Component {
 
@@ -101,6 +102,11 @@ class VideoDetail extends React.Component {
                     label: "Token Usage & Cost",
                     id: "usage",
                     content: <TokenUsage taskId={this.state.item.Request.TaskId} />
+                },
+                {
+                    label: "Data",
+                    id: "data",
+                    content: <DataSize taskId={this.state.item.Request.TaskId} />
                 },
             ]
         

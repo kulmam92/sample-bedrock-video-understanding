@@ -128,8 +128,8 @@ class VideoUpload extends React.Component {
         //console.log(payload)
 
         this.setState({status: "loading"});
-        const { username } = getCurrentUser().then((username) => {
-            payload["RequestBy"] = username.username;
+        getCurrentUser().then((user) => {
+            payload["RequestBy"] = user.username;
             // Start task
             FetchPost('/extraction/video/start-task', payload, "ExtrService")
                 .then((data) => {
@@ -179,16 +179,19 @@ class VideoUpload extends React.Component {
               let retries = 0;
               const uploadPromise = await fetch(urlResp.uploadPartUrls[i], {
                 method: 'PUT',
-                headers: {'Content-Type': ''},
                 body: chunk,
+                credentials: 'omit'
               }).then((response) => {
                 if (response.ok) {
-                    //console.log(response.headers.get('Etag'));
-                    parts.push({'ETag': response.headers.get('Etag'), 'PartNumber': i + 1})
+                    const etag = response.headers.get('ETag');
+                    parts.push({'ETag': etag || 'unknown', 'PartNumber': i + 1})
                     this.setState({uploadedChunks: this.state.uploadedChunks + 1})
-                    //console.log("uploaded", i, parts);
-                    //console.log(this.state);
+                } else {
+                    throw new Error(`Upload failed with status ${response.status}`);
                 }
+              }).catch((err) => {
+                console.error(`Upload part ${i + 1} failed:`, err);
+                throw err;
               });
               uploadPromises.push(uploadPromise);
             };
