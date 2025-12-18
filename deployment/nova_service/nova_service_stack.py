@@ -301,6 +301,27 @@ class NovaServiceStack(NestedStack):
                                 ),   
                             )
         
+        # Add CORS headers to error responses
+        api.add_gateway_response(
+            "unauthorized-cors",
+            type=_apigw.ResponseType.UNAUTHORIZED,
+            response_headers={
+                "Access-Control-Allow-Origin": "'*'",
+                "Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                "Access-Control-Allow-Methods": "'POST,OPTIONS'"
+            }
+        )
+        
+        api.add_gateway_response(
+            "default-4xx-cors",
+            type=_apigw.ResponseType.DEFAULT_4_XX,
+            response_headers={
+                "Access-Control-Allow-Origin": "'*'",
+                "Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                "Access-Control-Allow-Methods": "'POST,OPTIONS'"
+            }
+        )
+        
         # Create API Key and associated plan
         plan = api.add_usage_plan("UsagePlan",
             name="Easy",

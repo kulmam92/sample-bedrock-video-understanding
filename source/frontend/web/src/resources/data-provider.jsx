@@ -2,10 +2,15 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import { post, get, put } from 'aws-amplify/api';
 
 async function FetchPost(path, reqbody=null, apiName='NovaService') {
-  var request = await ContructRequest(path, reqbody, apiName);
-  const restOperation =  await post(request);
-  const { body, statusCode } = await restOperation.response;
-  return await body.json();
+  try {
+    var request = await ContructRequest(path, reqbody, apiName);
+    const restOperation =  await post(request);
+    const { body, statusCode } = await restOperation.response;
+    return await body.json();
+  } catch (error) {
+    console.error('FetchPost error:', error);
+    throw error;
+  }
 }
 
 async function FetchPut(path, reqbody=null, apiName='NovaService') {
@@ -29,8 +34,7 @@ async function ContructRequest(path, reqbody, apiName) {
     options: {
       body: reqbody,
       headers: {
-        Authorization: (await fetchAuthSession()).tokens?.idToken?.toString(),
-        "x-api-key": process.env.REACT_APP_APIGATEWAY_API_KEY
+        Authorization: (await fetchAuthSession()).tokens?.idToken?.toString()
       },
       queryParams: null
     }

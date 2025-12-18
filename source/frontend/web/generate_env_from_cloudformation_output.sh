@@ -19,7 +19,7 @@ get_output() {
 }
 
 # Extract values
-COGNITO_REGION="us-east-1"
+COGNITO_REGION=${CDK_DEFAULT_REGION:-us-east-1}
 COGNITO_USER_POOL_ID=$(get_output "CognitoUserPoolId")
 COGNITO_USER_POOL_CLIENT_ID=$(get_output "CognitoAppClientId")
 COGNITO_IDENTITY_POOL_ID=$(get_output "CognitoIdentityPoolId")

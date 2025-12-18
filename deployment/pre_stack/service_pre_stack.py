@@ -48,12 +48,13 @@ class ServicePreStack(NestedStack):
                 allowed_origins=["*"],
                 allowed_headers=["*"],
                 exposed_headers=["ETag"],
+                max_age=3000
             )])
         self.s3_data_bucket_name = s3_data_bucket.bucket_name
 
     def deploy_cognito(self):
         # Create Cognitio User pool and authorizer
-        user_pool = _cognito.UserPool(self, "WebUserPool",
+        user_pool = _cognito.UserPool(self, "WebUserPoolV2",
             user_pool_name=f"{COGNITO_NAME_PREFIX}-user-pool",
             self_sign_up_enabled=False,
             password_policy=_cognito.PasswordPolicy(

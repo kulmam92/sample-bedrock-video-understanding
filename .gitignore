@@ -59,6 +59,7 @@ source/frontend/web/.env.local
 source/frontend/web/.env.development.local
 source/frontend/web/.env.test.local
 source/frontend/web/.env.production.local
+source/frontend/web/.env.production
 
 # Testing
 .pytest_cache/

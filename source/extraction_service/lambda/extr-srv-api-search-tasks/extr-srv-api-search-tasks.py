@@ -45,9 +45,12 @@ def lambda_handler(event, context):
                         "TaskType": tt,
                         "RequestBy": task.get("RequestBy")
                     }
-                if "MetaData" in task and "VideoMetaData" in task["MetaData"] and "ThumbnailS3Bucket" in task["MetaData"]["VideoMetaData"]:
-                    r["S3Bucket"] = task["MetaData"]["VideoMetaData"]["ThumbnailS3Bucket"]
-                    r["S3Key"] = task["MetaData"]["VideoMetaData"]["ThumbnailS3Key"]
+                if "MetaData" in task and "VideoMetaData" in task["MetaData"]:
+                    video_meta = task["MetaData"]["VideoMetaData"]
+                    if "ThumbnailS3Bucket" in video_meta:
+                        r["S3Bucket"] = video_meta["ThumbnailS3Bucket"]
+                        r["S3Key"] = video_meta["ThumbnailS3Key"]
+                    r["MetaData"] = {"VideoMetaData": {"Size": video_meta.get("Size", 0), "Duration": video_meta.get("Duration", 0)}}
                 result.append(r)
 
     # Sort by RequestTs
@@ -58,19 +61,11 @@ def lambda_handler(event, context):
     if end_index > len(result):
         end_index = len(result)
 
-    # Generate URL
+    # Return S3 bucket/key for on-demand URL generation
     result = result[from_index:end_index]
-    for r in result:
-        if "S3Bucket" in r and "S3Key" in r:
-            r["ThumbnailUrl"] = s3.generate_presigned_url(
-                    'get_object',
-                    Params={'Bucket': r["S3Bucket"], 'Key': r["S3Key"]},
-                    ExpiresIn=S3_PRESIGNED_URL_EXPIRY_S
-                )
-            del r["S3Bucket"]
-            del r["S3Key"]
 
     return {
         'statusCode': 200,
         'body': result
     }
+# Force redeploy Sat Nov 22 11:55:06 PST 2025

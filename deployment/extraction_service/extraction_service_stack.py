@@ -604,6 +604,27 @@ class ExtrServiceStack(NestedStack):
                                 ),   
                             )
 
+        # Add CORS headers to error responses
+        api.add_gateway_response(
+            "unauthorized-cors",
+            type=_apigw.ResponseType.UNAUTHORIZED,
+            response_headers={
+                "Access-Control-Allow-Origin": "'*'",
+                "Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                "Access-Control-Allow-Methods": "'POST,OPTIONS'"
+            }
+        )
+        
+        api.add_gateway_response(
+            "default-4xx-cors",
+            type=_apigw.ResponseType.DEFAULT_4_XX,
+            response_headers={
+                "Access-Control-Allow-Origin": "'*'",
+                "Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                "Access-Control-Allow-Methods": "'POST,OPTIONS'"
+            }
+        )
+
         # Create resources
         v1 = api.root.add_resource("v1")
         ex = v1.add_resource("extraction")
@@ -776,6 +797,33 @@ class ExtrServiceStack(NestedStack):
                 memory_m=512, timeout_s=30, ephemeral_storage_size=512,
                 evns={
                     'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE,
+                },
+            )
+
+        # POST /v1/extraction/video/get-data-size
+        lambda_key = "extr-srv-api-get-data-size"
+        self.create_api_endpoint(id=f'{lambda_key}-ep', root=ex_video, path1="get-data-size", method="POST", auth=self.cognito_authorizer, 
+                role=self.create_role(lambda_key, ["s3", "dynamodb"]), 
+                lambda_file_name=lambda_key,
+                memory_m=512, timeout_s=60, ephemeral_storage_size=512,
+                evns={
+                    'S3_BUCKET': self.s3_bucket_name_extraction,
+                    'DYNAMO_VIDEO_TASK_TABLE': DYNAMO_VIDEO_TASK_TABLE,
+                    'DYNAMO_VIDEO_FRAME_TABLE': DYNAMO_VIDEO_FRAME_TABLE,
+                    'DYNAMO_VIDEO_SHOT_TABLE': DYNAMO_VIDEO_SHOT_TABLE,
+                    'DYNAMO_VIDEO_TRANS_TABLE': DYNAMO_VIDEO_TRANS_TABLE,
+                    'DYNAMO_VIDEO_USAGE_TABLE': DYNAMO_VIDEO_USAGE_TABLE,
+                },
+            )
+
+        # POST /v1/extraction/video/refresh-thumbnail-urls
+        lambda_key = "extr-srv-api-refresh-thumbnail-urls"
+        self.create_api_endpoint(id=f'{lambda_key}-ep', root=ex_video, path1="refresh-thumbnail-urls", method="POST", auth=self.cognito_authorizer, 
+                role=self.create_role(lambda_key, ["s3"]), 
+                lambda_file_name=lambda_key,
+                memory_m=256, timeout_s=30, ephemeral_storage_size=512,
+                evns={
+                    'S3_PRESIGNED_URL_EXPIRY_S': S3_PRESIGNED_URL_EXPIRY_S,
                 },
             )
 

@@ -7,14 +7,18 @@ import ClipVideoMain from "./components/videoClip/videoMain";
 import NovaMmeVideoMain from "./components/novaMme/videoMain";
 import TlabsMmeVideoMain from "./components/tlabsMme/videoMain";
 import AgentMain from "./components/agent/agentMain";
+import DataGenerationMain from "./components/dataGeneration/dataMain";
 import "./App.css";
 import { FetchPost } from "./resources/data-provider";
+import mainLogo from "./static/aws-logo.svg";
+import bedrockLogo from "./static/bedrock_logo.png";
 
 const ITEMS = [
   { type: "link", text: "Frame Based", id: "frame", href: "#/frame" },
   { type: "link", text: "Shot Based", id: "clip", href: "#/clip" },
   { type: "link", text: "Nova MME", id: "novamme", href: "#/novamme" },
   { type: "link", text: "TwelveLabs", id: "tlabsmme", href: "#/tlabsmme" },
+  { type: "link", text: "Data Generation", id: "datagen", href: "#/datagen" },
   { type: "link", text: "Chat with an agent", id: "agent", href: "#/agent" },
 ];
 
@@ -120,10 +124,16 @@ class App extends Component {
       <div className="app">
         {displayTopMenu && (
           <div className="topmenu">
-            <div className="title">Bedrock Video Understanding</div>
-            <div className="user" title={user.email}>
-              <Icon name="user-profile-active"></Icon>&nbsp;&nbsp;
-              {user.username}
+            <div className="header-left">
+              <img src={mainLogo} alt="Main" className="logo main-logo" />
+              <div className="title"><strong>Bedrock Video Understanding</strong></div>
+            </div>
+            <div className="header-right">
+              <img src={bedrockLogo} alt="Amazon Bedrock" className="logo bedrock-logo" />
+              <div className="user" title={user.email}>
+                <Icon name="user-profile-active"></Icon>&nbsp;&nbsp;
+                {user.username}
+              </div>
             </div>
           </div>
         )}
@@ -201,6 +211,11 @@ class App extends Component {
             />
           ) : currentPage === "tlabsmme" ? (
             <TlabsMmeVideoMain
+              cleanSelectionSignal={cleanSelectionSignal}
+              readOnlyUsers={this.getReadOnlyUsers()}
+            />
+          ) : currentPage === "datagen" ? (
+            <DataGenerationMain
               cleanSelectionSignal={cleanSelectionSignal}
               readOnlyUsers={this.getReadOnlyUsers()}
             />

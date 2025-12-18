@@ -6,6 +6,7 @@ import { Modal, ColumnLayout, Box, Tabs, Alert, Spinner, CopyToClipboard, Link }
 import VideoTrans from './videoTrans'
 import VideoShots from './videoShots'
 import TokenUsage from '../frameSample/tokenUsage'
+import DataSize from '../frameSample/dataSize'
 
 class VideoDetail extends React.Component {
 
@@ -100,6 +101,11 @@ class VideoDetail extends React.Component {
                     label: "Token Usage & Cost",
                     id: "usage",
                     content: <TokenUsage taskId={this.state.item.Request.TaskId} />
+                },
+                {
+                    label: "Data",
+                    id: "data",
+                    content: <DataSize taskId={this.state.item.Request.TaskId} />
                 },
             ]
         
